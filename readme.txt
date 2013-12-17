@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.7.1
-Stable tag: 0.1
+Stable tag: 0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,12 +26,17 @@ No conversion is necessary and the plugin can still be used as implementation of
 == Screenshots ==
 1. Media Library with NGG Tags
 2. Edit Media with NGG Tags
+3. Search Media using NGG Tags
 
 == Changelog ==
+= 0.2 =
+* Modified Media Library's 'Search Media' to search by NGG Tags or gallery
 = 0.1 =
 * Initial release.
 
 == Upgrade Notice ==
+= 0.2 =
+* Modified Media Library's 'Search Mdeia' to search by NGG Tags or gallery
 = 0.1 =
 * Initial release.
 
