@@ -5,7 +5,7 @@
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.1
+ * Version:       0.2
  * Author:        Magenta Cuda
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2
@@ -655,5 +655,49 @@ EOT;
         return $content;
     }
 }
+
+function make_slug( $tag ) {
+    return strtolower( str_replace( ' ', '-', $tag ) );
+}
+
+/*
+ * posts_where_ngg_tags_filter() modifies the search when either 'tags:' or 'gallery:' prefix is present in the search criteria
+ */
+ 
+function posts_where_ngg_tags_filter( $where ) {
+    global $wpdb;
+    if ( strpos( $_SERVER['SCRIPT_NAME'], '/upload.php' ) === FALSE ) { return $where; }
+    if ( $_REQUEST['action'] != -1 ) { return $where; }
+    if ( $_REQUEST['action2'] != -1 ) { return $where; }
+    if ( !( $is_tags = strpos( $_REQUEST['s'], 'tags:' ) === 0 ) && !( strpos( $_REQUEST['s'], 'gallery:' ) === 0 ) ) {
+        return $where;
+    }    
+    if ( $is_tags ) {
+        // ngg_tag search
+        list( , $tags ) = explode( ':', $_REQUEST['s'], 2 );
+        $tags = '"' . implode( '","', array_map( 'make_slug', explode( ',', $tags ) ) ) . '"';
+        if ( strpbrk( $tags, " \n\r\t\f()" ) !== false ) { die; } 
+        $where = <<<EOT
+ AND {$wpdb->posts}.post_type = 'attachment' AND ( {$wpdb->posts}.post_status = 'inherit' OR {$wpdb->posts}.post_status = 'private' ) 
+ AND EXISTS ( SELECT * FROM $wpdb->term_relationships r, $wpdb->term_taxonomy x, $wpdb->terms t
+    WHERE r.object_id = {$wpdb->posts}.ID AND r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id
+        AND t.slug IN ( $tags ) )
+EOT;
+    } else {
+        // gallery search
+        list( , $galleries ) = explode( ':', $_REQUEST['s'], 2 );
+        $galleries = '"' . implode( '","', array_map( 'make_slug', explode( ',', $galleries ) ) ) . '"';
+        if ( strpbrk( $galleries, " \n\r\t\f()" ) !== false ) { die; } 
+        $galleries = $wpdb->get_col( "SELECT ID from $wpdb->posts where post_name IN ( $galleries )" );
+        $galleries = ' "' . implode( '",', $galleries ) . '" ';
+        $where = <<<EOT
+ AND {$wpdb->posts}.post_type = 'attachment' AND ( {$wpdb->posts}.post_status = 'inherit' OR {$wpdb->posts}.post_status = 'private' ) 
+ AND {$wpdb->posts}.post_parent IN ( $galleries )
+EOT;
+    }
+    return $where;
+}
+
+add_filter( 'posts_where', posts_where_ngg_tags_filter );
 
 ?>
