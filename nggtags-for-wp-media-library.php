@@ -1,11 +1,12 @@
 <?php
+namespace NggTags_for_Media_Library;
 
 /*
  * Plugin Name:   NextGEN Gallery's nggtags for WordPress's Media Library
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.2
+ * Version:       0.3
  * Author:        Magenta Cuda
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2
@@ -30,6 +31,37 @@
 
 global $wpdb;
  
+list( $major, $minor ) = sscanf( phpversion(), '%D.%D' );
+$tested_major = 5;
+$tested_minor = 4;
+if ( !( $major > $tested_major || ( $major == $tested_major && $minor >= $tested_minor ) ) ) {
+    add_action( 'admin_notices', function () use ( $major, $minor, $tested_major, $tested_minor ) {
+        echo <<<EOD
+<div style="padding:10px 20px;border:2px solid red;margin:50px 20px;font-weight:bold;">
+    NextGEN Gallery's nggtags for WordPress's Media Library will not work with PHP version $major.$minor;
+    Please uninstall it or upgrade your PHP version to $tested_major.$tested_minor or later.
+</div>
+EOD;
+    } );
+    return;
+}
+
+add_action( 'init', function () {
+    // priority taxonomy will be used to replace NextGEN Gallery's sortorder
+    $labels = array(
+        'name'              => _x( 'Priority', 'taxonomy general name' ),
+        'singular_name'     => _x( 'Priority', 'taxonomy singular name' ),
+    );  
+    register_taxonomy( 'priority', 'attachment', array(
+        'label'             => __( 'Priority' ),
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'rewrite'           => array( 'slug' => 'priority' )
+    ) );
+    register_taxonomy_for_object_type( 'priority', 'attachment' );
+} );
+
 // NextGEN Gallery MySQL Table names defined here.
 
 $ntfwml_ngg_pictures  = $wpdb->prefix . 'ngg_pictures';
@@ -50,21 +82,16 @@ if ( $ntfwml_ngg_pictures_count && ( !$ntfwml_options || !isset( $ntfwml_options
      *
      * If the update is interrupted the update is re-startable since there is enough state in the database.
      */
-    add_action( 'admin_menu', 'register_nggtags_for_media_library_menu_page' );
-    
-    function register_nggtags_for_media_library_menu_page() {
-        add_menu_page( 'Update for Using nggtags on WordPress\'s Media Library', 'nggtags for Media Library', 'manage_options',
-        'nggtags_for_media_library', 'nggtags_for_media_library_menu_page' );
-    }
-    
-    function nggtags_for_media_library_menu_page() {
-        $nextgen_gallery_activated = class_exists( 'nggLoader' );
-        $options = get_option( 'nggtags_for_wp_media_library', array() );
-        if ( !$options || !isset( $options['status'] ) ) {
-            $continue = 'Start ';
-        } else {
-            $continue = 'Restart ';
-        }
+    add_action( 'admin_menu', function () {
+        add_menu_page( 'Update for Using nggtags on WordPress\'s Media Library', 'nggtags for Media Library',
+            'manage_options', 'nggtags_for_media_library', function () {
+            $nextgen_gallery_activated = class_exists( 'nggLoader' );
+            $options = get_option( 'nggtags_for_wp_media_library', array() );
+            if ( !$options || !isset( $options['status'] ) ) {
+                $continue = 'Start ';
+            } else {
+                $continue = 'Restart ';
+            }
 ?>
 <div style="padding:10px 20px;">
 <h1>NextGEN Gallery's nggtags for WordPress's Media Library</h1>
@@ -94,64 +121,71 @@ and the NextGEN Gallery's MySQL tables - wp_ngg_pictures, wp_ngg_gallery and wp_
 save space on your server.
 </small></div>
 <?php
-        if ( $nextgen_gallery_activated ) {
+            if ( $nextgen_gallery_activated ) {
 ?>
 <div style="border:2px solid red;margin:20px;padding:10px 20px;">
 NextGEN Gallery is activated. You must deactivate NextGEN Gallery before you can run the update.
 </div>
 <?php
-        }
-        // If there is any history display it.
-        if ( !empty( $options['messages'] ) ) {
+            }
+            // If there is any history display it.
+            if ( !empty( $options['messages'] ) ) {
 ?>
 <div style="border:2px solid black;margin=20px;padding=20px;"><p><small><ul>
 <h2>Previous Status Messages</h2>
 <?php
-            foreach ( $options['messages'] as $message ) {
-                echo "<li>$message</li>";
-            }
+                foreach ( $options['messages'] as $message ) {
+                    echo "<li>$message</li>";
+                }
 ?>
 </ul></small></p></div>
 <?php
-        }
+            }
 ?>
-<button id="ntfwml_update_button" type="button"<?php if ( $nextgen_gallery_activated ) { echo 'disabled'; } ?>>
+<button id="ntfwml_update_button" type="button"<?php if ( $nextgen_gallery_activated ) { echo ' disabled'; } ?>>
     <?php echo $continue ?>Update for nggtags on Media Library</button>
 <div id="ntfwml_status" style="border:2px solid black;margin:20px;padding:20px;display:none;"><p><small>
 <h2>Status Messages</h2><ul>
 <li>Update started. This may take some time ...</li>
 </ul></small></p></div>
 </div>
-<script type="text/javascript" >
-jQuery( "#ntfwml_update_button" ).click( function() {
+<script type="text/javascript">
+jQuery("#ntfwml_update_button").click( function() {
     var confirmed = confirm(
         "Did you really backup your database? "
         + "Pressing OK will make permanent changes to your database. "
         + "After these changes are made NextGEN Gallery will no longer work. "
     );
-    if ( confirmed ) {
+    if (confirmed) {
         this.disabled = true;
         jQuery( "#ntfwml_status" ).css( "display", "block" );
         var data = {
             'action': 'update_for_nggtags_on_media_library'
         };
-        jQuery.post(
-            ajaxurl,
-            data,
-            function ( response ) {
-                jQuery( "#ntfwml_status ul" ).html( response );
-            }
-        );
+        function update() {
+            console.log("post:action:"+data.action);
+            jQuery.post(
+                ajaxurl,
+                data,
+                function(response) {
+                    console.log("post:response"+response);
+                    jQuery("#ntfwml_status ul").html(response);
+                    if (response.indexOf("The conversion of NextGEN Gallery to WordPress Media Library is done.") === -1) {
+                        update();
+                    }
+                }
+            );
+        }
+        update();
     }
 } );
 </script>
 <?php
-    }
+        } );
+    } );
     
     if ( is_admin() ) {
-        add_action( 'wp_ajax_update_for_nggtags_on_media_library', 'update_for_nggtags_on_media_library' );
-        
-        function update_for_nggtags_on_media_library() {
+        add_action( 'wp_ajax_update_for_nggtags_on_media_library', function () {
         
             global $ntfwml_ngg_pictures;
             global $ntfwml_ngg_galleries;
@@ -245,7 +279,7 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                     if ( !file_exists( $upload_file ) ) {
                         break;
                     }
-                    $tag = '-' . (string) $i;
+                    $tag = '-' . (string) $i++;
                     $new_file_name = "$basename$tag$extension";
                     $upload_file = "$uploads[path]/$new_file_name";
                 }
@@ -285,8 +319,11 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                     "SELECT meta_value from $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'", OBJECT_K );
                 $gallery_paths = $wpdb->get_results(
                     "SELECT gid, path FROM $ngg_galleries", OBJECT_K );
-                $results = $wpdb->get_results(
-                    "SELECT pid, image_slug, galleryid, filename, description, alttext, imagedate FROM $ngg_pictures" );
+                $results = $wpdb->get_results( <<<EOD
+SELECT pid, image_slug, galleryid, filename, description, alttext, imagedate, sortorder
+    FROM $ngg_pictures ORDER BY sortorder ASC
+EOD
+                );
                 $count = 0;
                 foreach ( $results as $result ) {
                     $count++;
@@ -319,12 +356,16 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                                 );
                                 if ( $id = wp_insert_post( $post ) ) {
                                     // do all the related meta data
-                                    update_post_meta( $id, '_wp_attached_file',        $move_results['subdirpath'] );
-                                    update_post_meta( $id, '_wp_attachment_image_alt', $result->alttext,   TRUE );
+                                    update_post_meta( $id, '_wp_attached_file', $move_results['subdirpath'] );
+                                    update_post_meta( $id, '_wp_attachment_image_alt', $result->alttext, true );
+                                    // save reminder to do attachment metadata
+                                    //update_post_meta( $id, 'TODO:attachment_metadata', $move_results['file'] );
                                     $metadata = wp_generate_attachment_metadata( $id, $move_results['file'] );
                                     wp_update_attachment_metadata( $id, $metadata );
+                                    // add a taxonomy priority tag for NextGEN Gallery's sortorder
+                                    wp_set_post_terms( $id, 100 * $result->sortorder, 'priority' );
                                     // also save the original NextGEN Gallery picture id
-                                    update_post_meta( $id, 'pre_update_ngg_pid',       $result->pid );
+                                    update_post_meta( $id, 'pre_update_ngg_pid', $result->pid );
                                 }
                             }
                         }
@@ -354,10 +395,6 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                 return true;
             }
             
-            function cast_to_integer( $value ) {
-                return (integer) $value;
-            }
-            
             /*
              * update_term_relationships() updates the wp_term_relationships table in two passes:
              * In the first pass the table is scanned for all ngg_tag entries and the picture id and corresponding ngg_tags saved in the
@@ -377,15 +414,13 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                         "SELECT meta_value, post_id from $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'", OBJECT_K );
                     foreach ( $options['term_relationships'] as $pid => $term_ids ) {
                         if ( $new_pid = $new_pids[$pid]->post_id ) {
-                            $term_ids = array_map( 'cast_to_integer', $term_ids );
+                            $term_ids = array_map( function ( $value ) { return (integer) $value; }, $term_ids );
                             wp_set_object_terms( $new_pid, $term_ids, 'ngg_tag' );
                         }
                     }
                     return true;
                 }
-                
                 // This is the first phase where the obsolete ngg_tag relationship data is saved.
-                
                 // save ngg_tag relationship data in options
                 $pids = $wpdb->get_col( "SELECT pid FROM $ngg_pictures" );
                 $options['term_relationships'] = array();
@@ -393,16 +428,74 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                     $options['term_relationships'][$pid] = wp_get_object_terms( $pid, 'ngg_tag', array( 'fields' => 'ids' ) );
                 }
                 update_option( 'nggtags_for_wp_media_library', $options );
-                
                 // now we can delete the obsolete ngg tag relationship data
                 foreach ( $pids as $pid ) {
                     wp_delete_object_term_relationships( $pid, array( 'ngg_tag' ) );
                 }
-                
                 // go to phase 2
                 return update_term_relationships( $ngg_pictures, $options );
             }
-    
+
+            // update_post_content() fixes the NextGEN Gallery shortcodes nggallery and singlepic in post content
+           
+            function update_post_content() {
+                global $wpdb;
+                $new_gids = $wpdb->get_results(
+                    "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_gid'", OBJECT_K );
+                $new_pids = $wpdb->get_results(
+                    "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'", OBJECT_K );
+                $fix_shortcode = function( $matches ) use ( $new_gids, $new_pids ) {
+                    $new_ids = $matches[1] == 'nggallery' ? $new_gids : $new_pids;
+                    $fix_id = function( $matches ) use ( $new_ids ) {
+                        $mlid = $new_ids[$matches[3]]->post_id;
+                        return " id=\"$mlid\" nggid=\"$matches[3]\"";
+                    };
+                    return preg_replace_callback( '#\sid=(("|\')?)(\d+)\1#', $fix_id, $matches[0] );
+                };
+                $results = $wpdb->get_results( <<<EOT
+SELECT ID, post_content FROM $wpdb->posts
+    WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' )
+        AND post_content NOT LIKE '% nggid=%'
+EOT
+                    , OBJECT_K );
+                foreach ( $results as $post_id => $result ) {
+                    $post_content = preg_replace_callback( '#\[(nggallery|singlepic)\s[^\]]*\]#', $fix_shortcode,
+                        $result->post_content );
+                    $post = array(
+                        'ID' => $post_id,
+                        'post_content' => $post_content
+                    );
+                    wp_update_post( $post );
+                }
+                return true;
+            }
+            
+            // update_attachment_metadata() does the attachment metadata; done last because it is cpu expensive
+            
+            function update_attachment_metadata() {
+                global $wpdb;
+                $results = $wpdb->get_results(
+                    "SELECT post_id, meta_value file from $wpdb->postmeta WHERE meta_key = 'TODO:attachment_metadata'",
+                    OBJECT_K );
+                foreach ( $results as $id => $result ) {
+                    $metadata = wp_generate_attachment_metadata( $id, $result->file );
+                    wp_update_attachment_metadata( $id, $metadata );
+                }
+                return true;
+            }
+            
+            function send_all_messages_to_browser( $options, $die ) {
+                if ( !empty( $options['messages'] ) ) {
+                    foreach ( $options['messages'] as $message ) {
+                        echo "<li>$message</li>";
+                    }
+                }
+                if ( $die ) {
+                    echo "<li>working...</li>";
+                    die();
+                }
+            }
+            
             // Get last completed phase and continue from there.
             
             if ( !$ntfwml_options || !isset( $ntfwml_options['status'] ) ) {
@@ -412,125 +505,152 @@ jQuery( "#ntfwml_update_button" ).click( function() {
                     $ntfwml_options['status'] = 'galleries done';
                     $ntfwml_options['messages'][] = 'Galleries done.';
                     update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
                 }
             }
     
-            if ( $ntfwml_options['status'] == 'galleries done' ) {
+            if ( $ntfwml_options['status'] === 'galleries done' ) {
                 // Galleries done but pictures not started or not completed so start or continue the pictures.
                 if ( update_pictures( $ntfwml_ngg_pictures, $ntfwml_ngg_galleries, $ntfwml_options ) ) {
                     $ntfwml_options['status'] = 'pictures done';
                     $ntfwml_options['messages'][] = 'Pictures done.';
                     update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
                 }
             }
     
-            if ( $ntfwml_options['status'] == 'pictures done' ) {
+            if ( $ntfwml_options['status'] === 'pictures done' ) {
                 // Pictures done but thumbnails not started or not completed so start or continue the thumbnails.
                 if ( update_thumbnails( $ntfwml_options ) ) {
+                    // Thumbnails done.
                     $ntfwml_options['status'] = 'thumbnails done';
                     $ntfwml_options['messages'][] = 'Thumbnails done.';
                     update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
                 }
             }
             
-            if ( $ntfwml_options['status'] == 'thumbnails done' ) {
-                // Thumbnails done but term relationships not started or not completed so start or continue the term relationships.
-                
+            if ( $ntfwml_options['status'] === 'thumbnails done' ) {
+                // Thumbnails done but term relationships not started or not completed so start or continue doing
+                // the term relationships.   
                 // First register NextGEN Gallery's ngg_tag taxonomy so we can use wp_get_object_terms() and 
                 // wp_delete_object_term_relationships() which both require a registered taxonomy.
                 register_nextgen_gallery_taxonomy();
-                
                 if ( update_term_relationships( $ntfwml_ngg_pictures, $ntfwml_options ) ) {
-                    // Update completed.
-                    $ntfwml_options['status'] = 'update done';
+                    // Term relationships done.
+                    $ntfwml_options['status'] = 'term relationships done';
                     $ntfwml_options['messages'][] = 'Term relationships done.';
                     update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
+                }
+            }
+            
+            if ( $ntfwml_options['status'] === 'term relationships done' ) {
+                // Term relationships done but post content not started or not completed so start or continue doing
+                // the post content.
+                if ( update_post_content( $ntfwml_options ) ) {
+                    // Post content done.
+                    $ntfwml_options['status'] = 'post content done';
+                    $ntfwml_options['messages'][] = 'Post content done.';
+                    update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
+                }
+            }
+                
+            if ( $ntfwml_options['status'] === 'post content done' ) {
+                // Post content done but attachment metadata not started or not completed so start or continue doing
+                // the attachment metadata.
+                if ( update_attachment_metadata( ) ) {
+                    // Update completed.
+                    $ntfwml_options['status'] = 'attachment metadata done';
+                    $ntfwml_options['messages'][] = 'Attachment metadata done.';
+                    update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    //send_all_messages_to_browser( $ntfwml_options, true );
                 }
             }
             
             // If we get here then everything is done.
-            
+            $ntfwml_options['messages'][] = 'The conversion of NextGEN Gallery to WordPress Media Library is done.';
             // Send all messages to browser.
-            if ( !empty( $ntfwml_options['messages'] ) ) {
-                foreach ( $ntfwml_options['messages'] as $message ) {
-                    echo "<li>$message</li>";
-                }
-            }
-            echo '<li>Update completed.</li>';
-            
+            send_all_messages_to_browser( $ntfwml_options, false );
             // clean up transient data from wp_options.
             $ntfwml_options = array( 'status' => 'update done' );
             update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
-            
             die();
-        }
-    }
-    
+        } );
+    }  # if ( is_admin() ) {
     return;
-}
+}   # if ( $ntfwml_ngg_pictures_count && ( !$ntfwml_options || !isset( $ntfwml_options['status'] )
 
 // Update completed or no update needed so enable nggtags for Media Library.
-
 // Allow the user to set WordPress Gallery options for the shortcode 'nggtags'
 
-function nggtags_for_media_library_settings_init() {
+add_action( 'admin_init', function () {
     add_settings_section( 'nggtags_for_media_library_settings_section', 'Settings for nggtags for Media Library',
-        'do_nggtags_for_media_library_settings_section', 'nggtags_for_media_library_settings_page' );
-    add_settings_field( 'nggtags_for_media_library_gallery_options', 'Gallery Options',
-        'do_nggtags_for_media_library_gallery_options', 'nggtags_for_media_library_settings_page',
-        'nggtags_for_media_library_settings_section' );
-    register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
-}
-
-add_action( 'admin_init', 'nggtags_for_media_library_settings_init' );
-
-function do_nggtags_for_media_library_settings_section() {
-}
-
-function do_nggtags_for_media_library_gallery_options() {
+        function () {
 ?>
-<input id="nggtags_for_media_library_gallery_options" name="nggtags_for_media_library_gallery_options" type="text" size="40"
-    value='<?php echo get_option( 'nggtags_for_media_library_gallery_options' )?>' placeholder='e.g. size="thumbnail" link="file"'/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://codex.wordpress.org/Gallery_Shortcode">WordPress Gallery Options Documentation</a>
+<div style="margin:10px 20px;padding:5px 10px;font-size:smaller;">
+Since the NextGEN Gallery shortcodes - nggtags, nggallery and singlepic - are implemented
+using WordPress's gallery shortcode the options are the same as
+<a href="http://codex.wordpress.org/Gallery_Shortcode" target="_blank">the options of WordPress's gallery shortcode</a>.
+These options will automatically be added to the corresponding shortcodes in your post content.
+</div>
 <?php
-}
+        }, 'nggtags_for_media_library_settings_page' );
+    add_settings_field( 'nggtags_for_media_library_gallery_options', 'nggtags options',
+        function () {
+?>
+<input id="nggtags_for_media_library_gallery_options" name="nggtags_for_media_library_gallery_options" type="text"
+    size="40" value='<?php echo get_option( 'nggtags_for_media_library_gallery_options' )?>'
+    placeholder='e.g. size="thumbnail" link="file"'/>
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+    add_settings_field( 'nggallery_for_media_library_gallery_options', 'nggallery options',
+        function () {
+?>
+<input id="nggallery_for_media_library_gallery_options" name="nggallery_for_media_library_gallery_options" type="text"
+    size="40" value='<?php echo get_option( 'nggallery_for_media_library_gallery_options' )?>'
+    placeholder='e.g. size="thumbnail" link="file"'/>
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+    add_settings_field( 'singlepic_for_media_library_gallery_options', 'singlepic options',
+        function () {
+?>
+<input id="singlepic_for_media_library_gallery_options" name="singlepic_for_media_library_gallery_options" type="text"
+    size="40" value='<?php echo get_option( 'singlepic_for_media_library_gallery_options' )?>'
+    placeholder='e.g. size="thumbnail" link="file"'/>
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
+    register_setting( 'nggtags_for_media_library_settings', 'singlepic_for_media_library_gallery_options' );
+} ) ;
 
-add_action( 'admin_menu', 'nggtags_for_media_library_settings_menu', 11 );
-
-function nggtags_for_media_library_settings_menu() {
+add_action( 'admin_menu', function () {
     add_options_page( 'Settings for nggtags for Media Library', 'nggtags for Media Library',
-        'manage_options', 'nggtags_for_media_library_settings_page', 'do_nggtags_for_media_library_settings_page' );
-}
-
-function do_nggtags_for_media_library_settings_page() {
-    echo( '<form method="post" action="options.php">' );
-    settings_fields( 'nggtags_for_media_library_settings' ); 
-    do_settings_sections( 'nggtags_for_media_library_settings_page' );
-    submit_button();
-    echo( '</form>' );
-}
+        'manage_options', 'nggtags_for_media_library_settings_page', function () {
+        echo( '<form method="post" action="options.php">' );
+        settings_fields( 'nggtags_for_media_library_settings' ); 
+        do_settings_sections( 'nggtags_for_media_library_settings_page' );
+        submit_button();
+        echo( '</form>' );
+    } );       
+}, 11 );
     
-add_filter( 'plugin_action_links', 'plugin_action_links_for_nggtags_for_media_library', 10, 4 );
-
-function plugin_action_links_for_nggtags_for_media_library( $actions, $plugin_file, $plugin_data, $context ) {
+add_filter( 'plugin_action_links', function ( $actions, $plugin_file, $plugin_data, $context ) {
     if ( strpos( $plugin_file, basename( __FILE__ ) ) !== false ) {
         array_unshift( $actions, '<a href="' . admin_url( 'options-general.php?page=nggtags_for_media_library_settings_page' ) . '">'
             . __( 'Settings' ) . '</a>' );
     }
     return $actions;
-}
+}, 10, 4 );
         
-// First create the ngg_tag taxonomy.
-
-add_action( 'init', 'create_ngg_tag_taxonomy', 0 );
-
-function create_ngg_tag_taxonomy() {
-
+add_action( 'init', function () {
+    // First create the ngg_tag taxonomy.
     $labels = array(
         'name'              => _x( 'NGG Tags', 'taxonomy general name' ),
         'singular_name'     => _x( 'NGG Tag', 'taxonomy singular name' ),
     );
-    
     $args = array(
         'label'             => __( 'NGG Tags' ),
         'labels'            => $labels,
@@ -538,20 +658,13 @@ function create_ngg_tag_taxonomy() {
         'show_admin_column' => true,
         'rewrite'           => array( 'slug' => 'ngg_tag' )
     );
-    
     register_taxonomy( 'ngg_tag', 'attachment', $args );
-    register_taxonomy_for_object_type( 'ngg_tag', 'attachment' );    
-}
+    register_taxonomy_for_object_type( 'ngg_tag', 'attachment' );
+}, 0 );
 
-function enqueue_nggtags_scripts() {
-    wp_enqueue_script( 'jquery' );
-}
+add_action( 'wp_enqueue_scripts', function () { wp_enqueue_script( 'jquery' ); } );
 
-add_action( 'wp_enqueue_scripts', 'enqueue_nggtags_scripts' );
-
-// Now register the nggtags shortcode.
-
-add_shortcode( 'nggtags', 'nggtags_func' );
+// Now register the NextGEN Gallery shortcodes.
 
 include_once( dirname( __FILE__ ) . '/magic-fields-2-post-filter.php' );
 
@@ -561,7 +674,26 @@ include_once( dirname( __FILE__ ) . '/magic-fields-2-post-filter.php' );
  */
  
 class Nggtags_for_Media_Library {
-    use Magic_Fields_2_Toolkit_Post_Filters;
+    use \Magic_Fields_2_Toolkit_Post_Filters;
+}
+
+function sort_ids_by_priority( $ids ) {
+    global $wpdb;
+    # get the priorities which are tags in the priority taxonomy 
+    $list_ids = implode( ',', $ids );
+    $sort_order = $wpdb->get_results( <<<EOD
+SELECT r.object_id, t.name priority FROM $wpdb->terms t, $wpdb->term_taxonomy x, $wpdb->term_relationships r
+    WHERE t.term_id = x.term_id AND x.term_taxonomy_id = r.term_taxonomy_id AND x.taxonomy = 'priority'
+        AND r.object_id IN ( $list_ids )       
+EOD
+        , OBJECT_K );
+    uasort( $sort_order, function( $a, $b ) {
+        return $a->priority == $b->priority ? 0 : $a->priority < $b->priority ? -1 : 1;
+    } );
+    $sorted_ids = array_keys( $sort_order );
+    // now append those ids that don't have a priority
+    $ids = array_merge( $sorted_ids, array_diff( $ids, $sorted_ids ) );
+    return $ids;
 }
 
 /*
@@ -569,11 +701,17 @@ class Nggtags_for_Media_Library {
  * then constructs a shortcode for WordPress's 'gallery' shortcode with an 'ids' parameter and calls do_shortcode on the 
  * construct and returns this result.
  */
- 
-function nggtags_func( $atts, $content, $tag ) {
+
+add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
     static $count = 0;
     if ( !$tag ) { $tag = $atts[0]; }
-	extract( shortcode_atts( array( 'gallery' => '', 'album' => ''), $atts ) );
+    extract( $atts );
+    // pass all parameters except 'gallery' and 'album' to the WordPress builtin 'gallery' shortcode
+    unset( $atts['gallery'], $atts['album'] );
+    $args = '';
+    foreach ( $atts as $att => $att_value ) {
+        $args .= " $att=\"$att_value\"";
+    }
     $gallery_options = get_option( 'nggtags_for_media_library_gallery_options', '' );
     if ( !empty( $gallery_options ) ) {
         $gallery_options = ' ' . trim( $gallery_options );
@@ -581,12 +719,8 @@ function nggtags_func( $atts, $content, $tag ) {
     if ( !empty( $gallery ) ) {
         // this is a gallery
         $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:ngg_tag:' . $gallery );
-        // pass all parameters except 'gallery' and 'album' to the WordPress builtin 'gallery' shortcode
-        unset( $atts['gallery'], $atts['album'] );
-        $args = '';
-        foreach ( $atts as $att => $att_value ) {
-            $args = " $att=\"$att_value\"";
-        }
+        // reorder $ids using priorities saved in taxonomy priority
+        $ids = sort_ids_by_priority( $ids );
         // use WordPress's built in gallery to do NextGEN Gallery's nggtags shortcode
         return do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
     }
@@ -596,19 +730,28 @@ function nggtags_func( $atts, $content, $tag ) {
         $tags = explode( ',', $album );
         $image_ids = array();
         $gallery_image_ids = array();
+        $gallery_image_tags = array();
         foreach( $tags as $tag ) {
             $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:ngg_tag:' . $tag );
             if ( empty( $ids ) ) {
                 continue;
             }
+            // reorder $ids using priorities saved in taxonomy priority
+            $ids = sort_ids_by_priority( $ids );
             $image_ids[] = $ids;
             $gallery_image_ids[] = $ids[0];
-        }
-        // pass all parameters except 'gallery' and 'album' to the WordPress builtin 'gallery' shortcode
-        unset( $atts['gallery'], $atts['album'] );
-        $args = '';
-        foreach ( $atts as $att => $att_value ) {
-            $args = " $att=\"$att_value\"";
+            // get the term name for $tag
+            $term_name = $tag;
+            if ( is_array( $terms = get_the_terms( $ids[0], 'ngg_tag' ) ) ) {
+                foreach ( $terms as $term ) {
+                    if ( $term->slug === $tag ) {
+                        $term_name = $term->name;
+                        break;
+                    }
+                }
+            }
+            // save the term name to be used as caption for gallery
+            $gallery_image_tags[] = $term_name;
         }
         // for albums make sure link is not set since we want the permalink for preg_replace
         unset( $atts['link'] );
@@ -623,6 +766,12 @@ function nggtags_func( $atts, $content, $tag ) {
         // replace the <a> element with a <span> element since we do not want that link
         $album = preg_replace( array( '#<a\s.+?attachment_id=(\d+).+?>#', '#</a>#' ),
             array( '<span id="album-gallery-$1" class="album-gallery-icon">', '</span>' ), $album );
+        // replace the image captions with the tag name
+        $callback_count = 0;
+        $album = preg_replace_callback( '#(<(\w+)\s+class=(\'|")wp-caption-text[^\'"]*\3\s*>)([^<]*)(</\2>)#',
+            function ( $m ) use ( $gallery_image_tags, &$callback_count ) {
+                return $m[1] . $gallery_image_tags[$callback_count++] . $m[5];
+            }, $album );      
         // Since there may be multiple albums use $count to give everything a unique identity
         $content .= "<div id='div-album-$count'>$album</div>";
         // now do the corresponding galleries
@@ -637,7 +786,7 @@ function nggtags_func( $atts, $content, $tag ) {
         }
         $content .= "<div id='div-galleries-$count'>$galleries</div>";
         $script = <<<EOT
-<script>
+<script type="text/javascript">
     // install a click handler to show the corresponding gallery
     jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function() {
         jQuery( "div#div-album-$count" ).css( "display", "none" );        
@@ -654,28 +803,84 @@ EOT;
         $content .= $script;
         return $content;
     }
-}
+} );
 
-function make_slug( $tag ) {
-    return strtolower( str_replace( ' ', '-', $tag ) );
+/*
+ * nggallery_func() constructs a WordPress 'gallery' shortcode from the 'nggallery' shortcode and calls do_shortcode on the 
+ * construct and returns this result.
+ */
+ 
+add_shortcode( 'nggallery', function ( $atts, $content, $tag ) {
+    global $wpdb;
+    if ( !$tag ) { $tag = $atts[0]; }
+    extract( $atts );
+    // get the global nggallery options
+    $gallery_options = get_option( 'nggallery_for_media_library_gallery_options', '' );
+    if ( !empty( $gallery_options ) ) {
+        $gallery_options = ' ' . trim( $gallery_options );
+    }
+    if ( empty( $id ) ) { return ''; }
+    $ids = $wpdb->get_col( <<<EOD
+SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' AND post_parent = $id
+EOD
+    );
+    if ( empty( $ids ) ) { return ''; }
+    $ids = sort_ids_by_priority( $ids );
+    $ids = ' ids="' . implode( ',', $ids ) . '"';
+    unset( $atts['id'] );
+    $args = '';
+    foreach ( $atts as $att => $att_value ) {
+        $args .= " $att=\"$att_value\"";
+    }
+    // use WordPress's built in gallery to do NextGEN Gallery's nggallery shortcode
+    return do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+} );
+
+/*
+ * singlepic_func() constructs a WordPress 'gallery' shortcode from the 'singlepic' shortcode and calls do_shortcode on the 
+ * construct and returns this result.
+ */
+ 
+add_shortcode( 'singlepic', function ( $atts, $content, $tag ) {
+    if ( !$tag ) { $tag = $atts[0]; }
+    // get the global singlepic options
+	extract( $atts );
+    $gallery_options = get_option( 'singlepic_for_media_library_gallery_options', '' );
+    if ( !empty( $gallery_options ) ) {
+        $gallery_options = ' ' . trim( $gallery_options );
+    }
+    if ( empty( $id ) ) { return ''; }
+    $ids = " ids=\"$id\"";
+    unset( $atts['id'] );
+    $args = '';
+    foreach ( $atts as $att => $att_value ) {
+        $args .= " $att=\"$att_value\"";
+    }
+    // use WordPress's built in gallery shortcode to do NextGEN Gallery's singlepic shortcode
+    return do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+} );
+
+function is_nggtags_media_library_request() {
+    if ( strpos( $_SERVER['SCRIPT_NAME'], '/upload.php' ) === false ) { return false; }
+    if ( $_REQUEST['action'] != -1 || $_REQUEST['action2'] != -1 ) { return false; }
+    if ( !( strpos( $_REQUEST['s'], 'tags:' ) === 0 ) && !( strpos( $_REQUEST['s'], 'gallery:' ) === 0 ) ) {
+        return false;
+    }    
+    return true;
 }
 
 /*
  * posts_where_ngg_tags_filter() modifies the search when either 'tags:' or 'gallery:' prefix is present in the search criteria
  */
  
-function posts_where_ngg_tags_filter( $where ) {
+add_filter( 'posts_where', function ( $where ) {
     global $wpdb;
-    if ( strpos( $_SERVER['SCRIPT_NAME'], '/upload.php' ) === FALSE ) { return $where; }
-    if ( $_REQUEST['action'] != -1 ) { return $where; }
-    if ( $_REQUEST['action2'] != -1 ) { return $where; }
-    if ( !( $is_tags = strpos( $_REQUEST['s'], 'tags:' ) === 0 ) && !( strpos( $_REQUEST['s'], 'gallery:' ) === 0 ) ) {
-        return $where;
-    }    
-    if ( $is_tags ) {
+    if ( !is_nggtags_media_library_request() ) { return $where; }
+    if ( strpos( $_REQUEST['s'], 'tags:' ) === 0 ) {
         // ngg_tag search
         list( , $tags ) = explode( ':', $_REQUEST['s'], 2 );
-        $tags = '"' . implode( '","', array_map( 'make_slug', explode( ',', $tags ) ) ) . '"';
+        $tags = '"' . implode( '","', array_map( function ( $tag ) { return strtolower( str_replace( ' ', '-', $tag ) ); },
+            explode( ',', $tags ) ) ) . '"';
         if ( strpbrk( $tags, " \n\r\t\f()" ) !== false ) { die; } 
         $where = <<<EOT
  AND {$wpdb->posts}.post_type = 'attachment' AND ( {$wpdb->posts}.post_status = 'inherit' OR {$wpdb->posts}.post_status = 'private' ) 
@@ -683,10 +888,11 @@ function posts_where_ngg_tags_filter( $where ) {
     WHERE r.object_id = {$wpdb->posts}.ID AND r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id
         AND t.slug IN ( $tags ) )
 EOT;
-    } else {
+    } else if ( strpos( $_REQUEST['s'], 'gallery:' ) === 0 ) {
         // gallery search
         list( , $galleries ) = explode( ':', $_REQUEST['s'], 2 );
-        $galleries = '"' . implode( '","', array_map( 'make_slug', explode( ',', $galleries ) ) ) . '"';
+        $galleries = '"' . implode( '","', array_map( function ( $tag ) { return strtolower( str_replace( ' ', '-', $tag ) ); },
+            explode( ',', $galleries ) ) ) . '"';
         if ( strpbrk( $galleries, " \n\r\t\f()" ) !== false ) { die; } 
         $galleries = $wpdb->get_col( "SELECT ID from $wpdb->posts where post_name IN ( $galleries )" );
         $galleries = ' "' . implode( '",', $galleries ) . '" ';
@@ -694,10 +900,30 @@ EOT;
  AND {$wpdb->posts}.post_type = 'attachment' AND ( {$wpdb->posts}.post_status = 'inherit' OR {$wpdb->posts}.post_status = 'private' ) 
  AND {$wpdb->posts}.post_parent IN ( $galleries )
 EOT;
+    } else {
+        return $where;
     }
     return $where;
-}
+} );
 
-add_filter( 'posts_where', posts_where_ngg_tags_filter );
+add_filter( 'posts_orderby', function ( $orderby ) {
+    global $wpdb;
+    if ( is_nggtags_media_library_request() ) {
+        $orderby = "{$wpdb->posts}.post_title ASC";
+    }
+    return $orderby;
+} );
+
+add_filter( 'post_limits_request', function ( $limits ) {
+    global $wpdb;
+    if ( is_nggtags_media_library_request() ) {
+        $limits = 'LIMIT 0, 256';
+    }
+    return $limits;
+} );
+
+//add_filter( 'wp_get_attachment_link', function ( $html, $id, $size, $permalink, $icon, $text ) {
+//    return $html;
+//}, 10, 6 );
 
 ?>
