@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.3
+Stable tag: 0.3.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 4. The Conversion Log
 
 == Changelog ==
+= 0.3.0.1 =
+fix sort order bug on Media Library screen
 = 0.3 =
 * Added support for NextGEN Gallery's sort order and shortcodes nggallery and singlepic
 = 0.2 =
@@ -38,6 +40,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.3.0.1 =
+fix sort order bug on Media Library screen
 = 0.3 =
 * Added support for NextGEN Gallery's sort order and shortcodes nggallery and singlepic
 = 0.2 =

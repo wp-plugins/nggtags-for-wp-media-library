@@ -6,7 +6,7 @@ namespace NggTags_for_Media_Library;
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.3
+ * Version:       0.3.0.1
  * Author:        Magenta Cuda
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2
@@ -906,14 +906,6 @@ EOT;
     return $where;
 } );
 
-add_filter( 'posts_orderby', function ( $orderby ) {
-    global $wpdb;
-    if ( is_nggtags_media_library_request() ) {
-        $orderby = "{$wpdb->posts}.post_title ASC";
-    }
-    return $orderby;
-} );
-
 add_filter( 'post_limits_request', function ( $limits ) {
     global $wpdb;
     if ( is_nggtags_media_library_request() ) {
@@ -921,9 +913,5 @@ add_filter( 'post_limits_request', function ( $limits ) {
     }
     return $limits;
 } );
-
-//add_filter( 'wp_get_attachment_link', function ( $html, $id, $size, $permalink, $icon, $text ) {
-//    return $html;
-//}, 10, 6 );
 
 ?>
