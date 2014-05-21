@@ -3,13 +3,15 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.3.0.1
+Stable tag: 0.3.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Converts NextGEN Gallery images to WordPress Media Library images. Has an alternative implementation of NextGEN Gallery's nggtags shortcode.
 
 == Description ==
+**I have discovered a major bug in the restart logic - the plugin was designed to be able to restart after a server timeout and continue - however this is not working correctly and you should wait until I release a corrected version.** This bug is in all previous versions. However, it only occurred if you had restarted the conversion process.
+
 This plugin first converts NextGEN Gallery's image database to a WordPress Media Library image database. After the conversion NextGEN Gallery images and galleries have become WordPress Media Library images and galleries. NextGEN albums are ignored. A WordPress taxonomy 'ngg_tag' is created and the NextGEN Gallery image tags are saved in this taxonomy. This plugin also directly implements the 'nggtags' shortcode so post content with the 'nggtags' shortcode will still work without editing the post content. NextGEN Gallery's sortorder is implemented using a tag taxonomy to hold priorities. The website for this plugin is [here](http://nggtagsforwpml.wordpress.com/). **This plugin works with NextGEN Gallery 1.9.13 and requires at least PHP 5.4.**
 
 == Installation ==
@@ -30,6 +32,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 4. The Conversion Log
 
 == Changelog ==
+= 0.3.0.2 =
+recovery logic not working
 = 0.3.0.1 =
 fix sort order bug on Media Library screen
 = 0.3 =
@@ -40,6 +44,8 @@ fix sort order bug on Media Library screen
 * Initial release.
 
 == Upgrade Notice ==
+= 0.3.0.2 =
+recovery logic not working
 = 0.3.0.1 =
 fix sort order bug on Media Library screen
 = 0.3 =
