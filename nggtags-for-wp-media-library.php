@@ -6,7 +6,7 @@ namespace NggTags_for_Media_Library;
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.3.1
+ * Version:       0.4
  * Author:        Magenta Cuda
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2
@@ -46,41 +46,9 @@ EOD;
     return;
 }
 
-// register_new_ngg_tag_taxonomy_for_wp_attachments() creates the ngg_tag taxonomy for WordPress attachments.
-
-function register_new_ngg_tag_taxonomy_for_wp_attachments() {
-    $labels = array(
-        'name'              => _x( 'NGG Tags', 'taxonomy general name' ),
-        'singular_name'     => _x( 'NGG Tag', 'taxonomy singular name' ),
-    );
-    $args = array(
-        'label'             => __( 'NGG Tags' ),
-        'labels'            => $labels,
-        'show_ui'           => true,
-        'show_admin_column' => true,
-        'rewrite'           => array( 'slug' => 'ngg_tag' )
-    );
-    register_taxonomy( 'ngg_tag', 'attachment', $args );
-    register_taxonomy_for_object_type( 'ngg_tag', 'attachment' );
-}
-
-add_action( 'init', function () {
-    // priority taxonomy will be used to replace NextGEN Gallery's sortorder
-    $labels = array(
-        'name'              => _x( 'Priority', 'taxonomy general name' ),
-        'singular_name'     => _x( 'Priority', 'taxonomy singular name' ),
-    );  
-    register_taxonomy( 'priority', 'attachment', array(
-        'label'             => __( 'Priority' ),
-        'labels'            => $labels,
-        'show_ui'           => true,
-        'show_admin_column' => true,
-        'rewrite'           => array( 'slug' => 'priority' )
-    ) );
-    register_taxonomy_for_object_type( 'priority', 'attachment' );
-} );
-
 // Parameters
+
+$max_taxonomies = 8;
 
 // These limits should be set small enough so that the server can do the corresponding tasks without timing out
 // Depending on the speed of the server this may need adjustment
@@ -109,11 +77,29 @@ $ntfwml_options = get_option( 'nggtags_for_wp_media_library', array() );
 
 if ( $ntfwml_ngg_pictures_count && ( !$ntfwml_options || !isset( $ntfwml_options['status'] )
     || $ntfwml_options['status'] != 'update done' ) ) {
+    
     /*
      * Update not started or not completed so start or continue the update.
      *
      * If the update is interrupted the update is re-startable since there is enough state in the database.
      */
+     
+    add_action( 'init', function () {
+        // priority taxonomy will be used to replace NextGEN Gallery's sortorder
+        $labels = array(
+            'name'              => _x( 'Priority', 'taxonomy general name' ),
+            'singular_name'     => _x( 'Priority', 'taxonomy singular name' ),
+        );  
+        register_taxonomy( 'priority', 'attachment', array(
+            'label'             => __( 'Priority' ),
+            'labels'            => $labels,
+            'show_ui'           => true,
+            'show_admin_column' => true,
+            'rewrite'           => array( 'slug' => 'priority' )
+        ) );
+        register_taxonomy_for_object_type( 'priority', 'attachment' );
+    } );
+
     add_action( 'admin_menu', function () {
         add_menu_page( 'Update for Using nggtags on WordPress\'s Media Library', 'nggtags for Media Library',
             'manage_options', 'nggtags_for_media_library', function () {
@@ -642,6 +628,24 @@ EOT
                 }
             }
             
+            // register_new_ngg_tag_taxonomy_for_wp_attachments() creates the ngg_tag taxonomy for WordPress attachments.
+
+            function register_new_ngg_tag_taxonomy_for_wp_attachments() {
+                $labels = array(
+                    'name'              => _x( 'NGG Tags', 'taxonomy general name' ),
+                    'singular_name'     => _x( 'NGG Tag', 'taxonomy singular name' ),
+                );
+                $args = array(
+                    'label'             => __( 'NGG Tags' ),
+                    'labels'            => $labels,
+                    'show_ui'           => true,
+                    'show_admin_column' => true,
+                    'rewrite'           => array( 'slug' => 'ngg_tag' )
+                );
+                register_taxonomy( 'ngg_tag', 'attachment', $args );
+                register_taxonomy_for_object_type( 'ngg_tag', 'attachment' );
+            }
+            
             if ( $ntfwml_options['status'] === 'term relationships setup done' ) {
                 // Term relationships setup done but term relationships not started or not completed
                 // so start or continue doing the term relationships.
@@ -704,6 +708,7 @@ EOT
 // Allow the user to set WordPress Gallery options for the shortcode 'nggtags'
 
 add_action( 'admin_init', function () {
+    global $max_taxonomies;
     add_settings_section( 'nggtags_for_media_library_settings_section', 'Settings for nggtags for Media Library',
         function () {
 ?>
@@ -722,30 +727,112 @@ These options will automatically be added to the corresponding shortcodes in you
         function () {
 ?>
 <input id="nggtags_for_media_library_gallery_options" name="nggtags_for_media_library_gallery_options" type="text"
-    size="40" value='<?php echo get_option( 'nggtags_for_media_library_gallery_options' )?>'
-    placeholder='e.g. size="thumbnail" link="file"'/>
+    size="40" value='<?php echo get_option( 'nggtags_for_media_library_gallery_options' ); ?>'
+    placeholder='e.g. size="thumbnail" link="file" columns="4"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
     add_settings_field( 'nggallery_for_media_library_gallery_options', 'nggallery options',
         function () {
 ?>
 <input id="nggallery_for_media_library_gallery_options" name="nggallery_for_media_library_gallery_options" type="text"
-    size="40" value='<?php echo get_option( 'nggallery_for_media_library_gallery_options' )?>'
-    placeholder='e.g. size="thumbnail" link="file"'/>
+    size="40" value='<?php echo get_option( 'nggallery_for_media_library_gallery_options' ); ?>'
+    placeholder='e.g. size="thumbnail" link="file" columns="4"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
     add_settings_field( 'singlepic_for_media_library_gallery_options', 'singlepic options',
         function () {
 ?>
 <input id="singlepic_for_media_library_gallery_options" name="singlepic_for_media_library_gallery_options" type="text"
-    size="40" value='<?php echo get_option( 'singlepic_for_media_library_gallery_options' )?>'
+    size="40" value='<?php echo get_option( 'singlepic_for_media_library_gallery_options' ); ?>'
     placeholder='e.g. size="full"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'singlepic_for_media_library_gallery_options' );
-} ) ;
+    
+    add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
+        function () {
+?>
+<div style="margin:10px 20px;padding:5px 10px;font-size:smaller;">
+In addition to Ngg Tags you can create your own tag taxonomies for Media Library images.
+</div>
+<?php
+        }, 'nggtags_for_media_library_settings_page' );
+    $taxonomy_count = $max_taxonomies + 1; 
+    for ( $i = 1; $i <= $taxonomy_count; $i++ ) {
+        if ( $i === $taxonomy_count ) {
+            if ( !empty( $first_empty_i ) ) {
+                $use_i = $first_empty_i;
+                $taxonomy_slug = "nggtags_for_media_library_taxonomy_slug_$use_i";
+                $taxonomy_name = "nggtags_for_media_library_taxonomy_name_$use_i";
+            } else {
+                break;
+            }
+        } else {
+            $use_i = $i;
+            $taxonomy_slug = "nggtags_for_media_library_taxonomy_slug_$i";
+            $taxonomy_name = "nggtags_for_media_library_taxonomy_name_$i";
+        }
+        $taxonomy_name_value = get_option( $taxonomy_name );
+        if ( $i === 1 ) {
+            $taxonomy_slug_value = 'ngg_tag';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'NGG Tags'; }
+        } else if ( $i === 2 ) {
+            $taxonomy_slug_value = 'priority';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Priority'; }
+        } else {  
+            $taxonomy_slug_value = get_option( $taxonomy_slug );
+        }
+        if ( empty( $taxonomy_slug_value ) ) {
+            if ( $i !== $taxonomy_count ) {
+                if ( empty( $first_empty_i) ) { $first_empty_i = $i; }
+                continue;
+            }
+            $taxonomy_name_value = '';
+        }
+        add_settings_field( $taxonomy_name, "Taxonomy Name $use_i",
+            function () use ( $taxonomy_name, $taxonomy_name_value ) {
+?>
+<input id="<?php echo $taxonomy_name; ?>" name="<?php echo $taxonomy_name; ?>" type="text"
+    size="40" value="<?php echo $taxonomy_name_value; ?>" placeholder="enter new taxonomy name" />
+<?php
+            }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
+        add_settings_field( $taxonomy_slug, "Taxonomy Slug $use_i",
+            function () use ( $taxonomy_slug, $taxonomy_slug_value, $use_i ) {
+?>
+<input id="<?php echo $taxonomy_slug; ?>" name="<?php echo $taxonomy_slug; ?>" type="text"
+    size="40" value="<?php echo $taxonomy_slug_value; ?>" placeholder="enter new taxonomy slug"
+    <?php if ( $use_i <= 2 ) { echo 'disabled'; } ?> />
+    <?php if ( !empty( $taxonomy_slug_value ) && $use_i > 2 ) {
+        echo '&nbsp;&nbsp;an empty slug value will delete this taxonomy';
+    } ?>
+<?php
+            }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
+        register_setting( 'nggtags_for_media_library_settings', $taxonomy_slug );
+        register_setting( 'nggtags_for_media_library_settings', $taxonomy_name );
+    }
+    add_filter( 'pre_update_option', function ( $new_value, $option, $old_value ) {
+        if ( strpos( $option, 'nggtags_for_media_library_taxonomy_slug_' ) !== 0 ) { return $new_value; }
+        // nggtags_for_media_library_taxonomy_slugs cannot be changed
+        if ( $old_value && $new_value ) { return $old_value; }
+        return $new_value;
+    }, 10, 3 );
+    add_action( 'updated_option', function ( $option, $old_value, $new_value ) {
+        global $wpdb;
+        if ( sscanf( $option, 'nggtags_for_media_library_taxonomy_slug_%d', $index ) !== 1 ) { return; }
+        if ( $new_value ) { return; }
+        // !$new_value means delete the taxonomy
+        $ids = $wpdb->get_col( <<< EOD
+SELECT r.object_id FROM $wpdb->term_relationships r, $wpdb->term_taxonomy x
+    WHERE r.term_taxonomy_id = x.term_taxonomy_id AND x.taxonomy = "$old_value"
+EOD
+        );
+        foreach ( $ids as $id ) { wp_delete_object_term_relationships( $id, $old_value ); }
+        $ids = $wpdb->get_col( "SELECT term_id FROM $wpdb->term_taxonomy WHERE taxonomy = '$old_value'" );
+        foreach ( $ids as $id ) { wp_delete_term( $id, $old_value ); }
+    }, 10, 3 );
+} );
 
 add_action( 'admin_menu', function () {
     add_options_page( 'Settings for nggtags for Media Library', 'nggtags for Media Library',
@@ -766,7 +853,39 @@ add_filter( 'plugin_action_links', function ( $actions, $plugin_file, $plugin_da
     return $actions;
 }, 10, 4 );
         
-add_action( 'init', 'NggTags_for_Media_Library\register_new_ngg_tag_taxonomy_for_wp_attachments', 0 );
+
+add_action( 'init', function () {
+    global $max_taxonomies;
+    $taxonomy_count = $max_taxonomies; 
+    for ( $i = 1; $i <= $taxonomy_count; $i++ ) {
+        $taxonomy_slug = "nggtags_for_media_library_taxonomy_slug_$i";
+        $taxonomy_name = "nggtags_for_media_library_taxonomy_name_$i";
+        $taxonomy_name_value = get_option( $taxonomy_name );
+        if ( $i === 1 ) {
+            // create ngg_tag taxonomy for WordPress attachments.
+            $taxonomy_slug_value = 'ngg_tag';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'NGG Tags'; }
+        } else if ( $i === 2 ) {
+            // priority taxonomy will be used to replace NextGEN Gallery's sortorder
+            $taxonomy_slug_value = 'priority';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Priority'; }
+        } else {  
+            $taxonomy_slug_value = get_option( $taxonomy_slug );
+        }
+        if ( empty( $taxonomy_slug_value ) ) { continue; }
+        register_taxonomy( $taxonomy_slug_value, 'attachment', array(
+            'label'              => __( $taxonomy_name_value ),
+            'labels'             => array(
+                                        'name'          => _x( $taxonomy_name_value, 'taxonomy general name' ),
+                                        'singular_name' => _x( $taxonomy_name_value, 'taxonomy singular name' ),
+                                    ),
+            'show_ui'            => true,
+            'show_admin_column'  => true,
+            'rewrite'            => array( 'slug' => $taxonomy_slug_value )
+        ) );
+        register_taxonomy_for_object_type( $taxonomy_slug_value, 'attachment' );
+    }
+} );
 
 add_action( 'wp_enqueue_scripts', function () { wp_enqueue_script( 'jquery' ); } );
 
@@ -824,7 +943,11 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
     }
     if ( !empty( $gallery ) ) {
         // this is a gallery
-        $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:ngg_tag:' . $gallery );
+        // rewrite the default taxonomy 'ngg_tag' entry to include the implied taxonomy specifier 'ngg_tag:'
+        // the duplicate below is not a mistake - two passes are sometimes necessary
+        $gallery = preg_replace( '#(^|;)(([a-z_-]+,)*[a-z_-]+)(;|$)#', '$1ngg_tag:$2$4', $gallery );
+        $gallery = preg_replace( '#(^|;)(([a-z_-]+,)*[a-z_-]+)(;|$)#', '$1ngg_tag:$2$4', $gallery );
+        $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:' . $gallery );
         // reorder $ids using priorities saved in taxonomy priority
         $ids = sort_ids_by_priority( $ids );
         // use WordPress's built in gallery to do NextGEN Gallery's nggtags shortcode

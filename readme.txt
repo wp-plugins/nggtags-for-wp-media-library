@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.3.1
+Stable tag: 0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 4. The Conversion Log
 
 == Changelog ==
+= 0.4 =
+support for multiple taxonomies and boolean expressions 
 = 0.3.1 =
 change conversion logic to prevent timeout on larger databases 
 = 0.3.0.1 =
@@ -42,6 +44,8 @@ fix sort order bug on Media Library screen
 * Initial release.
 
 == Upgrade Notice ==
+= 0.4 =
+support for multiple taxonomies and boolean expressions 
 = 0.3.1 =
 change conversion tasks to prevent timeout on larger databases
 = 0.3.0.1 =
