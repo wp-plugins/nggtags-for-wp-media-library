@@ -6,7 +6,7 @@ namespace NggTags_for_Media_Library;
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.4
+ * Version:       0.5
  * Author:        Magenta Cuda
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2
@@ -834,6 +834,24 @@ EOD
     }, 10, 3 );
 } );
 
+if ( strpos( $_SERVER['REQUEST_URI'], 'nggtags-for-wp-media-library/upload.php' ) !== false ) {
+    add_action( 'wp_loaded', function() {
+        global $pagenow;
+        $pagenow = 'upload.php';
+    } );
+    add_action('admin_head', function() {
+    ?>
+      <base href="<?php echo admin_url(); ?>">
+    <?php
+    } );
+}
+
+add_action( 'admin_init', function () {
+    if ( isset( $_GET['page'] ) && $_GET['page'] === 'nggtags-for-wp-media-library/upload.php' ) {
+        wp_redirect( plugins_url( 'upload.php', __FILE__ ) );
+    }
+}, 1 );
+
 add_action( 'admin_menu', function () {
     add_options_page( 'Settings for nggtags for Media Library', 'nggtags for Media Library',
         'manage_options', 'nggtags_for_media_library_settings_page', function () {
@@ -842,7 +860,12 @@ add_action( 'admin_menu', function () {
         do_settings_sections( 'nggtags_for_media_library_settings_page' );
         submit_button();
         echo( '</form>' );
-    } );       
+    } );
+    #add_media_page( 'Library for NGG Tags', 'Library for NGG Tags', 'edit_posts', 'library-for-nggtags', function() {
+    #    wp_redirect( plugins_url( 'up_load.php', __FILE__ ) );
+    #} );
+    add_menu_page( 'Media Library for NGG Tags', 'Media for NGG Tags', 'edit_posts', 'nggtags-for-wp-media-library/upload.php',
+        '', '', '10.1' );
 }, 11 );
     
 add_filter( 'plugin_action_links', function ( $actions, $plugin_file, $plugin_data, $context ) {
