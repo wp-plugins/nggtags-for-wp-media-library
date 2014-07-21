@@ -1,0 +1,56 @@
+form.nggml-search-fields-form{
+    width:95%;
+    padding:10px;margin:5px;
+    border:2px solid black;
+    border-radius:7px;
+    background-color:#e8e8e8;
+}
+
+div#nggml-search-fields-help{
+    background-color:#c0c0c0;
+    width:25%;
+    float:right;
+    border:2px solid black;
+    border-radius:7px;
+    text-align:center;
+    margin:5px;
+}
+
+div.nggml-search-fields{
+    padding:5px 10px;
+    border:2px solid black;
+    border-radius:7px;
+    margin:10px 5px;
+}
+
+span.nggml-search-fields-field-label{
+    font-size=16px;
+    font-weight:bold;
+    float:left;
+}
+
+button.nggml-search-fields-show-button{
+    font-size:10px;
+    font-weight:bold;
+    padding:3px;
+    border:1px solid black;
+    border-radius:7px;
+    float:right;
+}
+
+input.nggml-search-fields-for-input{
+    width:90%;
+}
+
+div.nggml-search-fields-and-or-box{
+    padding:5px;
+    border:2px solid black;
+    border-radius:7px;
+    margin:10px 5px;
+}
+
+input#nggml-search-fields-submit{
+    color:black;
+    border:2px solid black;
+    border-radius:7px;
+}
