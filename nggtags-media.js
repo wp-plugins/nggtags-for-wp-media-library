@@ -65,9 +65,41 @@ tagBox = {
 		thetags.val( this.clean( new_tags.join(comma) ) );
 
 		this.quickClicks(taxbox);
+        this.cleanTags();
 		return false;
 	},
 
+    cleanTags : function(){
+        var posts=new Array();
+        jQuery('tr#bulk-edit div#bulk-titles div').each(function(){
+            posts.push(this.id.substr(4));
+        });
+        jQuery('tr#bulk-edit div.tagsdiv').each(function(){
+            var map=new Object();
+            jQuery('input.nggtags-for-ml-post_id-to-tags-to-edit',this.parentNode).val().split(';').forEach(function(p){
+                if(p){
+                    var m=p.split(':');
+                    map[m[0]]=m[1]?m[1].split(','):null;
+                }
+            });
+            valid=new Array();
+            for(var p in map){
+                if(!map[p]||posts.indexOf(p)===-1){continue;}
+                valid=valid.concat(map[p]);
+            }
+            var added=jQuery('input#nggtags-for-ml-added-'+this.id).val();
+            if(added){valid=valid.concat(added.substr(1).split(','))};
+            jQuery('div.tagchecklist span',this).each(function(){
+                var t=this.textContent.substr(this.textContent.indexOf('X')+1).trim();
+                if(valid.indexOf(t)!==-1){
+                    this.style.display="inline";
+                }else{
+                    this.style.display="none";
+                }
+            });
+        });
+    },
+    
 	quickClicks : function(el) {
 		var thetags = jQuery('.the-tags', el),
 			tagchecklist = jQuery('.tagchecklist', el),
@@ -122,6 +154,7 @@ tagBox = {
 		newtags = array_unique_noempty( newtags.split(comma) ).join(comma);
 		tags.val(newtags);
 		this.quickClicks(el);
+        this.cleanTags();
 		if ( !a )
 			newtag.val('');
 		if ( 'undefined' == typeof(f) )

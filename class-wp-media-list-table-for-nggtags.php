@@ -133,7 +133,11 @@ EOD
                 style="display: none">
                 <td colspan="<?php echo $this->get_column_count(); ?>" class="colspanchange">
                     <fieldset class="inline-edit-col-left"><div class="inline-edit-col">
+                        <div style="background-color:#c0c0c0;width:25%;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                            <a href="http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags" target="_blank">help</a>
+                        </div>
                         <h4><?php echo __( 'Bulk Edit' ); ?></h4>
+                        <p style="clear:both;margin:0px;">
                         <div id="bulk-title-div">
                             <div id="bulk-titles"></div>
                         </div>
@@ -147,10 +151,13 @@ EOD
                             <?php
                             $tags_to_edit = array();
                             $post_valid = null;
+                            $post_id_to_tags_to_edit = '';
                             foreach( $wp_query->posts as &$post ) {
                                 $count = count( $tags_to_edit );
-                                $tags_to_edit = array_merge( $tags_to_edit, explode( ',', get_terms_to_edit( $post->ID, $taxonomy->name ) ) );
+                                $tags_to_edit =  array_filter( array_merge( $tags_to_edit,
+                                    explode( ',', $terms_to_edit = get_terms_to_edit( $post->ID, $taxonomy->name ) ) ) );
                                 if ( !$post_valid && count( $tags_to_edit) > $count ) { $post_valid =& $post; }
+                                $post_id_to_tags_to_edit .= "$post->ID:$terms_to_edit;";
                             }
                             $nggtags_for_wp_media_library_in_inline_edit_tags_to_edit = implode( ',', array_unique( $tags_to_edit ) );
                             unset( $post );
@@ -171,6 +178,10 @@ EOD
                                 value="<?php echo implode( ',', array_unique( $tags_to_edit ) ); ?>" />
                             <input type="hidden" name="nggtags-for-ml-added[<?php echo $taxonomy->name; ?>]"
                                 id="nggtags-for-ml-added-<?php echo $taxonomy->name; ?>" />
+                            <input type="hidden" class="nggtags-for-ml-post_id-to-tags-to-edit"
+                                name="nggtags-for-ml-post_id-to-tags-to-edit[<?php echo $taxonomy->name; ?>]"
+                                id="nggtags-for-ml-post_id-to-tags-to-edit-<?php echo $taxonomy->name; ?>"
+                                value="<?php echo $post_id_to_tags_to_edit; ?>" />
                             <?php
                             echo '</div>';
                             unset( $post_valid );

@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.5
+Stable tag: 0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,16 +30,20 @@ No conversion is necessary and the plugin can still be used as implementation of
 4. The Conversion Log
 5. The Enhanced WordPress Media Library Page
 6. The Bulk Tag Taxonomy Editor
+7. Search Widget Administrator's Interface
+8. Search Widget User's Interface
 
 == Changelog ==
+= 0.6 =
+* added search widget for Media Library
 = 0.5 =
-modified WordPress media library page to filter by tags and bulk add/remove tags
+* modified WordPress media library page to filter by tags and bulk add/remove tags
 = 0.4 =
-support for multiple taxonomies and boolean expressions 
+* support for multiple taxonomies and boolean expressions 
 = 0.3.1 =
-change conversion logic to prevent timeout on larger databases 
+* change conversion logic to prevent timeout on larger databases 
 = 0.3.0.1 =
-fix sort order bug on Media Library screen
+* fix sort order bug on Media Library screen
 = 0.3 =
 * Added support for NextGEN Gallery's sort order and shortcodes nggallery and singlepic
 = 0.2 =
@@ -48,14 +52,16 @@ fix sort order bug on Media Library screen
 * Initial release.
 
 == Upgrade Notice ==
+= 0.6 =
+* added search widget for Media Library
 = 0.5 =
-modified WordPress media library page to filter by tags and bulk add/remove tags
+* modified WordPress media library page to filter by tags and bulk add/remove tags
 = 0.4 =
-support for multiple taxonomies and boolean expressions 
+* support for multiple taxonomies and boolean expressions 
 = 0.3.1 =
-change conversion tasks to prevent timeout on larger databases
+* change conversion tasks to prevent timeout on larger databases
 = 0.3.0.1 =
-fix sort order bug on Media Library screen
+* fix sort order bug on Media Library screen
 = 0.3 =
 * Added support for NextGEN Gallery's sort order and shortcodes nggallery and singlepic
 = 0.2 =

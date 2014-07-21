@@ -68,6 +68,7 @@ inlineEditPost = {
 			if ( 'add-tags' === $( 'select[name="' + n + '"]' ).val() ) {
 				e.preventDefault();
 				t.setBulk();
+                tagBox.cleanTags();
 			} else if ( $('form#posts-filter tr.inline-editor').length > 0 ) {
 				t.revert();
 			}
@@ -78,7 +79,7 @@ inlineEditPost = {
 		var t = this;
 		$( t.what + t.getId( el ) ).css( 'display' ) === 'none' ? t.revert() : t.edit( el );
 	},
-
+    
 	setBulk : function(){
 		var te = '', type = this.type, tax, c = true;
 		this.revert();
