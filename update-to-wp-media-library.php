@@ -249,6 +249,7 @@ jQuery("#ntfwml_update_button").click( function() {
                     $options['messages'][] = $uploads['error'];
                     return false;
                 }
+                $uploads[path] = str_replace( '\\', '/', $uploads[path] );
                 $file_atts = wp_check_filetype_and_ext( $file, basename( $file ) );
                 if ( !empty( $file_atts['proper_filename'] ) ) {
                     $new_file_name = $file_atts['proper_filename'];

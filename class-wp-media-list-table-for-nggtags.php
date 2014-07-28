@@ -18,6 +18,8 @@ class WP_Media_List_Table_for_Ngg_Tags extends WP_Media_List_Table {
         $actions = parent::get_bulk_actions();
         # add support for bulk addition and removal of tags
         $actions['add-tags'] = __( 'Add/Remove Tags' );
+        # add support for bulk setting of priorities
+        $actions['edit-priority'] = __( 'Set Priorities' );
         return $actions;
     }
     
@@ -132,7 +134,7 @@ EOD
                 echo " bulk-edit-row bulk-edit-row-$hclass bulk-edit-attachment"; ?>"
                 style="display: none">
                 <td colspan="<?php echo $this->get_column_count(); ?>" class="colspanchange">
-                    <fieldset class="inline-edit-col-left"><div class="inline-edit-col">
+                    <fieldset class="bulk-edit-taxonomy inline-edit-col-left" style="display:none"><div class="inline-edit-col">
                         <div style="background-color:#c0c0c0;width:25%;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
                             <a href="http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags" target="_blank">help</a>
                         </div>
@@ -142,7 +144,7 @@ EOD
                             <div id="bulk-titles"></div>
                         </div>
                     </div></fieldset>
-                    <fieldset class="inline-edit-col-right"><div class="inline-edit-col"><br>
+                    <fieldset class="bulk-edit-taxonomy inline-edit-col-right" style="display:none"><div class="inline-edit-col"><br>
                         <?php if ( count( $flat_taxonomies ) ) : ?>
                         <?php foreach ( $flat_taxonomies as $taxonomy ) : ?>
                         <?php if ( current_user_can( $taxonomy->cap->assign_terms ) ) : ?>
@@ -192,6 +194,23 @@ EOD
                         <?php endif; ?>
                         <?php endforeach; //$flat_taxonomies as $taxonomy ?>
                         <?php endif; // count( $flat_taxonomies ) && !$bulk  ?>
+                    </div></fieldset>
+                    <fieldset class="bulk-edit-priority inline-edit-col-left" style="display:none"><div class="inline-edit-col">
+                        <div style="background-color:#c0c0c0;width:100px;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                            <a href="http://nggtagsforwpml.wordpress.com/#bulk-priority-edit" target="_blank">help</a>
+                        </div>
+                        <h4><?php echo __( 'Bulk Priority Editor' ); ?></h4>
+                        <p style="clear:both;margin:0px;">
+                        Start: <input id="nggml-bulk-priority-edit-start" name="nggml-bulk-priority-edit-start"
+                            type="number" size="12" min="1" value="100" required style="text-align:right;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        Increment: <input id="nggml-bulk-priority-edit-increment" name="nggml-bulk-priority-edit-increment"
+                            type="number" size="12" min="1" value="100" required style="text-align:right;">
+                        <input type="hidden" name="nggml-bulk-priority-edit-order" id="nggml-bulk-priority-edit-order" />
+                        <div id="nggml-bulk-priority-edit-images"></div>
+                        <?php
+                        #$thumb = wp_get_attachment_image( $post->ID, array( 80, 60 ), true );
+                        ?>
                     </div></fieldset>
                     <p class="submit inline-edit-save">
                     <a accesskey="c" href="#inline-edit" class="button-secondary cancel alignleft"><?php _e( 'Cancel' ); ?></a>

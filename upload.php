@@ -54,6 +54,32 @@ if ( $doaction ) {
                 wp_remove_object_terms( $id, $removed, $taxonomy->name );
             }
 		}
+    } else if ( 'edit-priority' === $doaction ) {
+        $start = $_REQUEST['nggml-bulk-priority-edit-start'];
+        $increment =  $_REQUEST['nggml-bulk-priority-edit-increment'];
+        if ( !is_numeric( $start ) || !is_numeric( $increment ) ) {
+			wp_die( __( 'Invalid start or increment value.' ) );
+        }
+        $start = (integer) $start;
+        $increment = (integer) $increment;
+        if ( $start <= 0 || $increment <= 0 ) {
+			wp_die( __( 'Invalid start or increment value.' ) );
+        }        
+        $order = $_REQUEST['nggml-bulk-priority-edit-order'];
+        $order = explode( ';', rtrim( $order, ';' ) );
+        if ( !is_array( $order )|| !order ) {
+			wp_die( __( 'Invalid list of image ids.' ) );
+        }
+        $order = array_map( function( $id ) {
+            return substr( $id, 5);
+        }, $order );    
+        for ($priority = $start; ; $priority += $increment ) {
+            $id = array_shift( $order );
+            wp_set_post_terms( $id, (string) $priority, 'priority', false );
+            if ( !$order ) {
+                break;
+            }
+        }
 	} else
     
     # End of injected NGG Tags code that supports bulk addition/removal of taxonomy tags
@@ -213,6 +239,7 @@ $parent_file = 'upload.php';
 wp_enqueue_script( 'media' );
 
 # Start of injected NGG Tags code that loads my client side javascripts
+wp_enqueue_style( 'nggtags-media', plugins_url( 'nggtags-media.css', __FILE__ ) );
 wp_enqueue_script( 'nggtags-media', plugins_url( 'nggtags-media.js', __FILE__ ), array( 'jquery' ) );
 wp_enqueue_script( 'inline-edit-nggtags-media', plugins_url( 'inline-edit-nggtags-media.js', __FILE__ ),
     array( 'jquery', 'suggest', 'heartbeat' ) );

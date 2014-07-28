@@ -1,0 +1,29 @@
+#wpbody-content .bulk-edit-row fieldset.bulk-edit-priority.inline-edit-col-left{
+    width:100%;
+}
+
+div.nggml-bulk-priority-edit-slot{
+    display:inline-block;
+    margin:20px 0px 0px 0px;
+}
+
+div.nggml-bulk-priority-edit-insert{
+    display:inline-block;
+    width:4px;
+    background-color:white;
+    margin:0px 4px 0px 0px;
+    vertical-align:middle;
+}
+
+div.nggml-bulk-priority-edit-insert.hover{
+    background-color:black;
+}
+
+div.nggml-bulk-priority-edit-item{
+    display:inline-block;
+    margin:0px;
+    text-align:center;
+    vertical-align:middle;
+    overflow:hidden;
+    border:2px solid black;
+}

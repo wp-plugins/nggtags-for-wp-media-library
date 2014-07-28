@@ -65,10 +65,15 @@ inlineEditPost = {
 
 		$('#doaction, #doaction2').click(function(e){
 			var n = $(this).attr('id').substr(2);
-			if ( 'add-tags' === $( 'select[name="' + n + '"]' ).val() ) {
+			var a = $( 'select[name="' + n + '"]' ).val();
+			if ( 'add-tags' === a || 'edit-priority' === a ) {
 				e.preventDefault();
-				t.setBulk();
-                tagBox.cleanTags();
+				t.setBulk(a);
+                if ( 'add-tags' === a ) {
+                    tagBox.cleanTags();
+                } else if ( 'edit-priority' === a ) {
+                    tagBox.cleanImages();
+                }
 			} else if ( $('form#posts-filter tr.inline-editor').length > 0 ) {
 				t.revert();
 			}
@@ -80,13 +85,18 @@ inlineEditPost = {
 		$( t.what + t.getId( el ) ).css( 'display' ) === 'none' ? t.revert() : t.edit( el );
 	},
     
-	setBulk : function(){
+	setBulk : function(a){
 		var te = '', type = this.type, tax, c = true;
 		this.revert();
 
 		$('#bulk-edit td').attr('colspan', $('.widefat:first thead th:visible').length);
 		$('table.widefat tbody').prepend( $('#bulk-edit') );
 		$('#bulk-edit').addClass('inline-editor').show();
+        if ( 'add-tags' === a ) {
+            $('#bulk-edit .bulk-edit-taxonomy').show();
+        } else if ( 'edit-priority' === a ) {
+            $('#bulk-edit .bulk-edit-priority').show();
+        }
 		$( 'tbody th.check-column input[type="checkbox"]' ).each( function() {
 			if ( $(this).prop('checked') ) {
 				c = false;
@@ -297,6 +307,8 @@ inlineEditPost = {
 
 			if ( 'bulk-edit' === id ) {
 				$('table.widefat #bulk-edit').removeClass('inline-editor').hide();
+                $('#bulk-edit .bulk-edit-taxonomy').hide();
+                $('#bulk-edit .bulk-edit-priority').hide();
 				$('#bulk-titles').html('');
 				$('#inlineedit').append( $('#bulk-edit') );
 			} else {
