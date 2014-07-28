@@ -100,6 +100,79 @@ tagBox = {
         });
     },
     
+    cleanImages:function(){
+        function saveOrder(){
+            var start=Number(jQuery('input#nggml-bulk-priority-edit-start').val());
+            var increment=Number(jQuery('input#nggml-bulk-priority-edit-increment').val());
+            var order="";
+            var priority=start;
+            jQuery("div#nggml-bulk-priority-edit-images img").each(function(){
+                jQuery("span.nggml-bulk-priority-edit-item-priority",this.parentNode).text(priority+" ");
+                order+=this.dataset.postId+";";
+                priority+=increment;
+            });
+            jQuery("input#nggml-bulk-priority-edit-order").val(order);
+        }
+        var posts=new Array();
+        jQuery('tr#bulk-edit div#bulk-titles div').each(function(){
+            posts.push(this.id.substr(4));
+        });
+        var container=jQuery('div#nggml-bulk-priority-edit-images').get(0);
+        jQuery(container).empty();
+        var height=0;
+        jQuery('tbody#the-list td.media-icon img').each(function(){
+            var post = jQuery(this).parents('tr').get(0).id.substr(5);
+            if(posts.indexOf(post)!==-1){
+                var slot=document.createElement("div");
+                slot.className="nggml-bulk-priority-edit-slot";
+                slot.style.textAlign="center";
+                slot.style.width=(this.width+30)+"px";
+                var insert=document.createElement("div");
+                insert.className="nggml-bulk-priority-edit-insert";
+                insert.style.height=this.height+"px";
+                var item=document.createElement("div");
+                item.className="nggml-bulk-priority-edit-item";
+                item.style.width=(this.width+10)+"px";
+                var image=document.createElement("img");
+                image.src=this.src;
+                image.width=this.width;
+                image.height=this.height;
+                image.dataset.postId=jQuery(this).parents("tr").get(0).id;
+                image.title=jQuery(jQuery("td.title a",jQuery(this).parents("tr").get(0)).get(0)).text().trim();
+                var spanPriority=document.createElement("span");
+                var br=document.createElement("br");
+                spanPriority.className="nggml-bulk-priority-edit-item-priority";
+                var spanTitle=document.createElement("span");
+                var title=document.createTextNode(image.title);
+                spanTitle.appendChild(title);
+                item.appendChild(image);
+                item.appendChild(spanPriority);
+                item.appendChild(br);
+                item.appendChild(spanTitle);
+                slot.appendChild(insert);
+                slot.appendChild(item);
+                container.appendChild(slot);
+                height=this.height;
+            }
+        });
+        var slot=document.createElement("div");
+        slot.className="nggml-bulk-priority-edit-slot";
+        var insert=document.createElement("div");
+        insert.className="nggml-bulk-priority-edit-insert";
+        insert.style.height=height+"px";
+        slot.appendChild(insert);
+        container.appendChild(slot);       
+        jQuery("div.nggml-bulk-priority-edit-slot").draggable({cursor:"crosshair",revert:true});
+        jQuery("div.nggml-bulk-priority-edit-insert").droppable({accept:"div.nggml-bulk-priority-edit-slot",tolerance:"touch",
+            hoverClass:"hover",drop:function(e,u){
+            jQuery(this.parentNode).before(u.draggable);
+            saveOrder();
+        }});
+        jQuery('input#nggml-bulk-priority-edit-start').change(saveOrder);
+        jQuery('input#nggml-bulk-priority-edit-increment').change(saveOrder);
+        saveOrder();
+    },
+    
 	quickClicks : function(el) {
 		var thetags = jQuery('.the-tags', el),
 			tagchecklist = jQuery('.tagchecklist', el),
