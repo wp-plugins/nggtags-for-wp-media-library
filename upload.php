@@ -66,18 +66,20 @@ if ( $doaction ) {
 			wp_die( __( 'Invalid start or increment value.' ) );
         }        
         $order = $_REQUEST['nggml-bulk-priority-edit-order'];
-        $order = explode( ';', rtrim( $order, ';' ) );
-        if ( !is_array( $order )|| !order ) {
-			wp_die( __( 'Invalid list of image ids.' ) );
-        }
-        $order = array_map( function( $id ) {
-            return substr( $id, 5);
-        }, $order );    
-        for ($priority = $start; ; $priority += $increment ) {
-            $id = array_shift( $order );
-            wp_set_post_terms( $id, (string) $priority, 'priority', false );
-            if ( !$order ) {
-                break;
+        if ( $order !== 'reverted' ) {
+            $order = explode( ';', rtrim( $order, ';' ) );
+            if ( !is_array( $order )|| !order ) {
+                wp_die( __( 'Invalid list of image ids.' ) );
+            }
+            $order = array_map( function( $id ) {
+                return substr( $id, 5);
+            }, $order );    
+            for ($priority = $start; ; $priority += $increment ) {
+                $id = array_shift( $order );
+                wp_set_post_terms( $id, (string) $priority, 'priority', false );
+                if ( !$order ) {
+                    break;
+                }
             }
         }
 	} else
@@ -201,18 +203,39 @@ if ( $doaction ) {
 
 # Start of injected NGG Tags code that does the additional filtering on tag taxonomies
 
+# since we want to order by priority we need to join with the taxonomy tables
+
+add_filter( 'posts_join', function( $join ) {
+    global $wpdb;
+    if ( strpos( $_SERVER['REQUEST_URI'], 'nggtags-for-wp-media-library/upload.php' ) === false ) { return $join; }
+    return $join . <<< EOD
+        LEFT JOIN ( SELECT $wpdb->term_relationships.object_id, $wpdb->terms.name
+            FROM $wpdb->term_relationships
+            INNER JOIN $wpdb->term_taxonomy ON $wpdb->term_relationships.term_taxonomy_id = $wpdb->term_taxonomy.term_taxonomy_id
+            INNER JOIN $wpdb->terms ON $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
+            WHERE $wpdb->term_taxonomy.taxonomy = 'priority'
+        ) priority ON $wpdb->posts.ID = priority.object_id
+EOD;
+} );
+
 add_filter( 'posts_where', function( $where ) {
     global $wpdb;
     if ( strpos( $_SERVER['REQUEST_URI'], 'nggtags-for-wp-media-library/upload.php' ) === false ) { return $where; }
     $ids = false;
-    foreach ( $_REQUEST as $taxonomy => $slug ) {
+    foreach ( $_REQUEST as $taxonomy => $slugs ) {
         if ( substr_compare( $taxonomy, 'filter-', 0, 7 ) !== 0 ) { continue; }
-        if ( $slug === '0' ) { continue; }
-        $taxonomy = substr( $taxonomy, 7 );
+        if ( $slugs[0] === '0-nggml-all' ) { continue; }
+        # select is now multiple value so $slugs is an array of taxonomy slugs
+        $slugs = implode( ', ', array_map( function( $slug ) {
+            global $wpdb;
+            return $wpdb->prepare( '%s', $slug );
+        }, $slugs ) );
+        $taxonomy = $wpdb->prepare( '%s', substr( $taxonomy, 7 ) );
+        # get all objects with $taxonomy slug in $slugs
         $sql = <<<EOD
           SELECT r.object_id FROM wp_term_relationships r, wp_term_taxonomy x, wp_terms t
             WHERE r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id
-              AND x.taxonomy = "$taxonomy" and t.slug = "$slug"
+              AND x.taxonomy = $taxonomy and t.slug IN ( $slugs )
 EOD;
         $objects = $wpdb->get_col( $sql );
         if ( !$objects ) { return $where . ' AND  1 = 2 '; }
@@ -227,6 +250,19 @@ EOD;
     $where .= ' AND wp_posts.ID IN ( ' . implode( ', ', $ids ) . ' ) ';
     return $where;
 } );
+
+# order by priority using the join with the 'priority' taxonomy table
+
+add_filter( 'posts_orderby', function( $order_by ) {
+    global $wpdb;
+    if ( strpos( $_SERVER['REQUEST_URI'], 'nggtags-for-wp-media-library/upload.php' ) === false ) { return $order_by; }
+    return "CAST( IF ( priority.name IS NOT NULL, priority.name, ~0 ) AS UNSIGNED ) ASC";
+} );
+
+#add_filter( 'posts_request', function( $request ) {
+#    if ( strpos( $_SERVER['REQUEST_URI'], 'nggtags-for-wp-media-library/upload.php' ) === false ) { return $request; }
+#    return $request;
+#} );
 
 # End of injected NGG Tags code that does the additional filtering on tag taxonomies
 

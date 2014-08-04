@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.7
+Stable tag: 0.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,11 @@ No conversion is necessary and the plugin can still be used as implementation of
 9. The Bulk Priority Editor
 
 == Changelog ==
+= 0.7.1 =
+* sort images in Media Library for nggtags by priority
+* change taxonomy select boxes in Media Library for nggtags to multiple selection
+* show existing priorities in Bulk Priority Editor
+* make images in Bulk Priority Editor removable
 = 0.7 =
 * added bulk priority (sort order) editor
 * fix problem with backslashes (\) in file paths on Windows servers causing wp_generate_attachment_metadata() to fail in conversion process
@@ -56,6 +61,11 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.7.1 =
+* sort images in Media Library for nggtags by priority
+* change taxonomy select boxes in Media Library for nggtags to multiple selection
+* show existing priorities in Bulk Priority Editor
+* make images in Bulk Priority Editor removable
 = 0.7 =
 * added bulk priority (sort order) editor
 * fix problem with backslashes (\) in file paths on Windows servers causing wp_generate_attachment_metadata() to fail in conversion process
