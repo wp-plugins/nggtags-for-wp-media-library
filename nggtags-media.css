@@ -1,7 +1,64 @@
+div#nggml-bulk-priority-edit-button-revert:hover, div#nggml-bulk-priority-edit-button-reorder:hover{
+    cursor:default;
+}
+
+div#nggml-bulk-priority-edit-button-help:hover, div#nggml-bulk-priority-edit-button-help a:hover{
+    cursor:help;
+}
+
 #wpbody-content .bulk-edit-row fieldset.bulk-edit-priority.inline-edit-col-left{
     width:100%;
 }
 
+/* following copied from "#bulk-titles div a" of ...\wp-admin\css\common.css */
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a:before{
+    background: none;
+    color: #bbb;
+    content: '\f153';
+    display: block !important;
+    font: normal 16px/1 'dashicons';
+    speak: none;
+    height: 20px;
+    margin: 2px 0;
+    text-align: center;
+    width: 20px;
+    -webkit-font-smoothing: antialiased !important;
+}
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a:hover:before{
+    color: #c00;
+}
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a,
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a:hover {
+    background: none !important;
+}
+
+/* following copied from "#bulk-titles div a" of ...\wp-admin\css\list-tables.css */
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a{
+    cursor: pointer;
+    display: block;
+    float: left;
+    height: 18px;
+    margin: 0 3px 0 -2px;
+    overflow: hidden;
+    position:absolute;
+    width: 20px;
+}
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a:before{
+    position:absolute;
+}
+
+/* end of copied css */
+
+div#nggml-bulk-priority-edit-images div.nggml-bulk-priority-edit-slot a{
+    height: 22px;
+}
+
+    
 div.nggml-bulk-priority-edit-slot{
     display:inline-block;
     margin:20px 0px 0px 0px;
@@ -26,4 +83,5 @@ div.nggml-bulk-priority-edit-item{
     vertical-align:middle;
     overflow:hidden;
     border:2px solid black;
+    position:relative;
 }

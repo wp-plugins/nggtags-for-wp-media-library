@@ -101,6 +101,36 @@ tagBox = {
     },
     
     cleanImages:function(){
+        function revertOrder(){
+            var map=new Object();
+            jQuery("input#nggtags-for-ml-post_id-to-tags-to-edit-priority").val().split(";").forEach(function(p){
+                if(p){
+                    var m=p.split(":");
+                    map[m[0]]=m[1]?m[1].split(","):[""];
+                }
+            });
+            var images=jQuery("div#nggml-bulk-priority-edit-images img");
+            images.each(function(){
+                jQuery("span.nggml-bulk-priority-edit-item-priority",this.parentNode).text(
+                    map[this.dataset.postId.substr(5)][0]+" ");
+            });
+            var start=jQuery("span.nggml-bulk-priority-edit-item-priority",images.get(0).parentNode).text();
+            var increment=100;
+            if(jQuery.isNumeric(start)&&start>0){
+                start=Math.ceil(start);
+                if(images.length>1){
+                    var next=jQuery("span.nggml-bulk-priority-edit-item-priority",images.get(1).parentNode).text();
+                    if(jQuery.isNumeric(next)&&next>start){
+                        increment=Math.ceil(next-start);
+                    }
+                }
+            }else{
+                start=100;
+            }
+            jQuery("input#nggml-bulk-priority-edit-start").val(start);
+            jQuery("input#nggml-bulk-priority-edit-increment").val(increment);
+            jQuery("input#nggml-bulk-priority-edit-order").val("reverted");
+        }
         function saveOrder(){
             var start=Number(jQuery('input#nggml-bulk-priority-edit-start').val());
             var increment=Number(jQuery('input#nggml-bulk-priority-edit-increment').val());
@@ -139,15 +169,23 @@ tagBox = {
                 image.height=this.height;
                 image.dataset.postId=jQuery(this).parents("tr").get(0).id;
                 image.title=jQuery(jQuery("td.title a",jQuery(this).parents("tr").get(0)).get(0)).text().trim();
+                var br0=document.createElement("br");
                 var spanPriority=document.createElement("span");
-                var br=document.createElement("br");
+                var br1=document.createElement("br");
                 spanPriority.className="nggml-bulk-priority-edit-item-priority";
                 var spanTitle=document.createElement("span");
                 var title=document.createTextNode(image.title);
                 spanTitle.appendChild(title);
+				var xbutton=jQuery('<a id="ntdelbutton-' + image.dataset.postId + '" class="ntdelbutton">X</a>');
+				xbutton.click(function(){
+                    jQuery(this.parentNode.parentNode).remove();
+                    saveOrder();
+                });
+				item.appendChild(xbutton.get(0));
                 item.appendChild(image);
+                item.appendChild(br0);
                 item.appendChild(spanPriority);
-                item.appendChild(br);
+                item.appendChild(br1);
                 item.appendChild(spanTitle);
                 slot.appendChild(insert);
                 slot.appendChild(item);
@@ -170,7 +208,8 @@ tagBox = {
         }});
         jQuery('input#nggml-bulk-priority-edit-start').change(saveOrder);
         jQuery('input#nggml-bulk-priority-edit-increment').change(saveOrder);
-        saveOrder();
+        revertOrder();
+        return saveOrder;
     },
     
 	quickClicks : function(el) {

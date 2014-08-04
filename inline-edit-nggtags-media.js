@@ -72,7 +72,13 @@ inlineEditPost = {
                 if ( 'add-tags' === a ) {
                     tagBox.cleanTags();
                 } else if ( 'edit-priority' === a ) {
-                    tagBox.cleanImages();
+                    var reorder=tagBox.cleanImages();
+                    jQuery('div#nggml-bulk-priority-edit-button-reorder').click(function(e){
+                        reorder();
+                    });
+                    jQuery('div#nggml-bulk-priority-edit-button-revert').click(function(e){
+                        tagBox.cleanImages();
+                    });
                 }
 			} else if ( $('form#posts-filter tr.inline-editor').length > 0 ) {
 				t.revert();

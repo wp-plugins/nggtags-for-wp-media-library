@@ -37,9 +37,9 @@ class WP_Media_List_Table_for_Ngg_Tags extends WP_Media_List_Table {
 EOD
             , OBJECT );
 ?>
-        <select name="filter-<?php echo $taxonomy; ?>" class="filter-<?php echo $taxonomy; ?>"
+        <select name="filter-<?php echo $taxonomy; ?>[]" class="filter-<?php echo $taxonomy; ?>" multiple size="4"
             <?php if ( $hidden ) { echo 'style="display:none;"'; } ?>>
-            <option value="0"><?php echo "All $name"; ?></option>
+            <option value="0-nggml-all" selected><?php echo "All $name"; ?></option>
 <?php
         foreach ( $terms as $term ) {
 ?>
@@ -59,7 +59,8 @@ EOD
         <div class="alignleft actions">
 <?php
         if ( 'top' == $which && !is_singular() && !$this->detached && !$this->is_trash ) {
-             $this->months_dropdown( 'attachment' );
+            # the single value select month filter seems out of place here so omit for now
+            #$this->months_dropdown( 'attachment' );
           
             # nggtags version supports tag filters
             $hidden = get_hidden_columns( $this->screen );           
@@ -196,8 +197,20 @@ EOD
                         <?php endif; // count( $flat_taxonomies ) && !$bulk  ?>
                     </div></fieldset>
                     <fieldset class="bulk-edit-priority inline-edit-col-left" style="display:none"><div class="inline-edit-col">
-                        <div style="background-color:#c0c0c0;width:100px;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                        <!-- help button -->
+                        <div id="nggml-bulk-priority-edit-button-help"
+                            style="background-color:#c0c0c0;width:100px;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
                             <a href="http://nggtagsforwpml.wordpress.com/#bulk-priority-edit" target="_blank">help</a>
+                        </div>
+                        <!-- revert button -->
+                        <div id="nggml-bulk-priority-edit-button-revert"
+                            style="background-color:#c0c0c0;width:100px;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                            revert
+                        </div>
+                        <!-- reorder button -->
+                        <div id="nggml-bulk-priority-edit-button-reorder"
+                            style="background-color:#c0c0c0;width:100px;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                            reorder
                         </div>
                         <h4><?php echo __( 'Bulk Priority Editor' ); ?></h4>
                         <p style="clear:both;margin:0px;">
