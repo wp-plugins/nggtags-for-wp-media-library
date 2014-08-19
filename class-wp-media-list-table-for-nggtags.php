@@ -37,8 +37,23 @@ class WP_Media_List_Table_for_Ngg_Tags extends WP_Media_List_Table {
 EOD
             , OBJECT );
 ?>
-        <select name="filter-<?php echo $taxonomy; ?>[]" class="filter-<?php echo $taxonomy; ?>" multiple size="4"
-            <?php if ( $hidden ) { echo 'style="display:none;"'; } ?>>
+		<div style="position:relative;top:0px;left:0px;width:0px;height:0px;margin:0px;display:block;float:left;z-index:1000;">
+			<div class="nggml-filter-checkbox-overlay"
+				style="position:absolute;top:0px;left:0px;width:100px;padding:10px;border:1px solid black;background-color:#e0e0e0;display:none;">
+				<input type="checkbox" value="0-nggml-all" checked>
+					<?php echo "All $name"; ?><br>
+<?php
+        foreach ( $terms as $term ) {
+?>
+				<input type="checkbox" name="filter-<?php echo $taxonomy; ?>[]" value="<?php echo $term->slug; ?>">
+					<?php echo $term->name . ' (' . $term->count . ')'; ?><br>
+<?php
+        }
+?>
+			</div>
+		</div>
+        <select name="filter-<?php echo $taxonomy; ?>[]" class="nggml-filter filter-<?php echo $taxonomy; ?>"
+			<?php if ( $hidden ) { echo 'style="display:none;"'; } ?>>
             <option value="0-nggml-all" selected><?php echo "All $name"; ?></option>
 <?php
         foreach ( $terms as $term ) {
