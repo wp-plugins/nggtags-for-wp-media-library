@@ -378,6 +378,19 @@ if ( !empty($message) ) { ?>
 <?php find_posts_div(); ?> 
 </form>
 
+<!-- Start of injected NGG Tags code to support screen option state -->
+
+<?php
+$nggml_screen_options = json_encode( (object) get_option( 'nggml_screen_options',
+	[ 'use_checkbox_overlay_for_select' => 1 ] ) );
+?>
+
+<form>
+<input type="hidden" id="nggml-screen-options" value='<?php echo $nggml_screen_options; ?>'>
+</form>
+
+<!-- End of injected NGG Tags code to support screen option state -->
+
 <!-- Start of injected NGG Tags code to support inline bulk editing -->
 
 <?php

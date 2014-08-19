@@ -71,7 +71,7 @@ class Search_Media_Library_by_Taxonomy_Widget extends WP_Widget {
     target="_blank">help</a>
 </div>
 <p style="clear:both;margin:0px;">
-<h4>Please specify search conditions:<h4>
+<h4>Please specify search conditions:</h4>
 <?php
         $selected = $instance['attachment'];
         $SQL_LIMIT = (integer) $instance['maximum_number_of_items'];
@@ -223,6 +223,7 @@ of the search conditions.
 </div>
 </div>
 <div style="text-align:right;">
+<input id="nggml-search-fields-reset" type="button" value="Reset">
 <input id="nggml-search-fields-submit" name="nggml-search-fields-submit" type="submit" value="Start Search">
 &nbsp;&nbsp;
 </div>
@@ -237,6 +238,15 @@ jQuery("button.nggml-search-fields-show-button").click(function(event){
         jQuery("div.nggml-search-fields-values",this.parentNode).css("display","none");
     }
     return false;
+});
+jQuery("div.nggml-search-fields-values input[type='checkbox']").change(function(){
+	this.parentNode.parentNode.style.backgroundColor=jQuery("input[type='checkbox']:checked",this.parentNode).size()
+		?"white":this.parentNode.parentNode.parentNode.style.backgroundColor;
+});
+jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
+	jQuery("div.nggml-search-fields-values input[type='checkbox']").prop("checked",false);
+	jQuery("div.nggml-search-fields").css("background-color",
+		jQuery("div#nggml-search-fields-parameters").css("background-color"));
 });
 </script>
 <?php
