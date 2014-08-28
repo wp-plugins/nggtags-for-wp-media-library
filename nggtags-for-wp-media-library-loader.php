@@ -5,7 +5,7 @@
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.7.1.1
+ * Version:       0.8
  * Author:        Magenta Cuda (PHP), Black Charger (JavaScript)
  * Author URI:    http://magentacuda.wordpress.com
  * License:       GPL2

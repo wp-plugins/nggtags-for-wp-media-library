@@ -38,8 +38,8 @@ EOD
             , OBJECT );
 ?>
 		<div style="position:relative;top:0px;left:0px;width:0px;height:0px;margin:0px;display:block;float:left;z-index:1000;">
-			<div class="nggml-filter-checkbox-overlay"
-				style="position:absolute;top:0px;left:0px;width:100px;padding:10px;border:1px solid black;background-color:#e0e0e0;display:none;">
+			<div class="nggml-filter-checkbox-overlay" style="position:absolute;top:0px;left:0px;width:100px;display:none;">
+        <div class="nggml-filter-checkbox-overlay-controls"><button class="nggml-button-close">X</button></div>
 				<input type="checkbox" value="0-nggml-all" checked>
 					<?php echo "All $name"; ?><br>
 <?php
@@ -145,7 +145,7 @@ EOD
 		$m = 'list';
         $hclass = 'post';
         ?>
-        <form method="get" action=""><table style="display: none"><tbody id="inlineedit">
+        <form method="get" action=""><table style="display:none"><tbody id="inlineedit">
             <tr id="bulk-edit" class="inline-edit-row <?php echo "inline-edit-row-$hclass inline-edit-attachment";
                 echo " bulk-edit-row bulk-edit-row-$hclass bulk-edit-attachment"; ?>"
                 style="display: none">
@@ -251,7 +251,19 @@ EOD
                     </p>
                 </td>
             </tr>
-		</tbody></table></form>
+            <tr id="nggml-alt-media-list" style="display:none;">
+                <td colspan="<?php echo $this->get_column_count(); ?>" class="colspanchange">
+                    <fieldset id="nggml-alt-media-list-pane"><div>
+                      <div id="nggml-alt-media-list-titles"></div>
+                      <div id="nggml-alt-media-list-images"></div>
+                    </div></fieldset>
+                </td>
+            </tr>
+        </tbody></table></form>
+        <div id="nggml-overlay" style="position:fixed;display:none;">
+            <div class="nggml-overlay-controls"><button class="nggml-button-close">X</button></div>
+            <div class="nggml-overlay-container"><img><p></p></div>
+        </div>
 		<?php
     }  
 }

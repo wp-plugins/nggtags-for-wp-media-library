@@ -1,95 +1,338 @@
 // extracted from wp-admin\js\media.js
 
 jQuery(document).ready(function(){
-	jQuery("div.contextual-help-tabs").append('<li id="tab-link-nggtags"><a href="#tab-panel-nggtags" \
-		aria-controls="tab-panel-nggtags">Ngg Tags Features</a></li>');
-	jQuery("div.contextual-help-tabs-wrap").append('<div id="tab-panel-nggtags" class="help-tab-content" \
-		style="display:none;"><p>Ngg Tags Features</p><p>The filters allow multiple values to be selected. \
-		Enabling "Use Checkbox Overlay for Filters" from the "Screen Options" replaces the select box with a overlay of \
-		checkboxes. (Note that this feature may not work on all browsers.)</p><p>The "Bulk Actions" include actions for \
-		bulk editing taxonomy tags and order priorities.</p></div>');
-	jQuery("div.contextual-help-sidebar").append('<a href="http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags" \
-		target="_blank">Documentation on Media Library for NGG Tags</a>');
-	var select=jQuery("select.nggml-filter");
-	var height0=select.parent().height();
-	jQuery("form#adv-settings div.screen-options").prepend(
-		'<input type="checkbox" id="nggtags-for-ml-use-checkboxes-overlay">' +
-		'<label for="nggtags-for-ml-use-checkboxes-overlay">Use Checkbox Overlay for Filters</label>'
-	);
-	var nggmlScreenOptions=JSON.parse(jQuery("input#nggml-screen-options").val());
-	jQuery("input#nggtags-for-ml-use-checkboxes-overlay").prop("checked",nggmlScreenOptions.use_checkbox_overlay_for_select);
-	jQuery("input#nggtags-for-ml-use-checkboxes-overlay").change(function(){
-		var select=jQuery("select.nggml-filter");
-		select.prop("multiple",!this.checked);
-		select.prop("size",!this.checked?"4":"1");
-		select.parent().height(!this.checked?select.height()+10:height0);
-		jQuery("select.nggml-filter option").prop("selected",false);
-		jQuery("select.nggml-filter option[value='0-nggml-all']").prop("selected",true);
-		jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox']").prop("checked",false);
-		jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox'][value='0-nggml-all']").prop("checked",true);
-		var nggmlScreenOptions={use_checkbox_overlay_for_select:this.checked?1:0};
-		jQuery.post(ajaxurl,{action:'update_nggml_screen_options',nggml_screen_options:nggmlScreenOptions});
-	});
-	select.prop("multiple",!nggmlScreenOptions.use_checkbox_overlay_for_select);
-	select.prop("size",!nggmlScreenOptions.use_checkbox_overlay_for_select?"4":"1");
-	var height;
-	jQuery("select.nggml-filter").mouseenter(function(e){
-		e.preventDefault();
-		e.stopPropagation();
-		e.stopImmediatePropagation();
-		e.returnValue=false;
-		if(jQuery("input#nggtags-for-ml-use-checkboxes-overlay").prop("checked")){
-			var overlay=jQuery("div.nggml-filter-checkbox-overlay",jQuery(this).prev());
-			overlay.width(jQuery(this).width());
-			overlay.css("display","block");
-			var parent=overlay.parent().parent();
-			height=parent.height();
-			parent.height(overlay.height()+30);
-		}
-		return false;
-	});
-    jQuery("div.nggml-filter-checkbox-overlay").mouseleave(function(e){
-        jQuery(this).css("display","none");
-		jQuery(this).parent().parent().height(height);
+    jQuery("div.contextual-help-tabs").append('<li id="tab-link-nggtags"><a href="#tab-panel-nggtags" \
+        aria-controls="tab-panel-nggtags">Ngg Tags Features</a></li>');
+    jQuery("div.contextual-help-tabs-wrap").append('<div id="tab-panel-nggtags" class="help-tab-content" \
+        style="display:none;"><p>Ngg Tags Features</p><p>The filters allow multiple values to be selected. \
+        Enabling "Use Checkbox Overlay for Filters" from the "Screen Options" replaces the select box with a overlay of \
+        checkboxes. (Note that this feature may not work on all browsers.)</p><p>Enabling \
+        "Use Alternate High Density Media List View" from the "Screen Options" replaces the WordPress table view with a \
+        "high density" gallery view.</p><p>The "Bulk Actions" include actions for bulk editing taxonomy tags and order \
+        priorities.</p></div>');
+    jQuery("div.contextual-help-sidebar").append('<a href="http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags" \
+        target="_blank">Documentation on Media Library for NGG Tags</a>');
+    var select=jQuery("select.nggml-filter");
+    var height0=select.parent().height();
+    jQuery("form#adv-settings div.screen-options").prepend(
+        '<input type="checkbox" id="nggtags-for-ml-use-checkboxes-overlay">'+
+        '<label for="nggtags-for-ml-use-checkboxes-overlay">Use Checkbox Overlay for Filters</label>'+
+        '<input type="checkbox" id="nggtags-for-ml-use-alt-media-list-pane">'+
+        '<label for="nggtags-for-ml-use-alt-media-list-pane">Use Alternate High Density Media List View</label>'
+    );
+    var nggmlScreenOptions=JSON.parse(jQuery("input#nggml-screen-options").val());
+    jQuery("input#nggtags-for-ml-use-checkboxes-overlay").prop("checked",nggmlScreenOptions.use_checkbox_overlay_for_select);
+    jQuery("input#nggtags-for-ml-use-checkboxes-overlay").change(function(){
+        var select=jQuery("select.nggml-filter");
+        select.prop("multiple",!this.checked);
+        select.prop("size",!this.checked?"4":"1");
+        select.parent().height(!this.checked?select.height()+10:height0);
+        jQuery("select.nggml-filter option").prop("selected",false);
+        jQuery("select.nggml-filter option[value='0-nggml-all']").prop("selected",true);
+        jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox']").prop("checked",false);
+        jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox'][value='0-nggml-all']").prop("checked",true);
+        var nggmlScreenOptions={use_checkbox_overlay_for_select:this.checked?1:0};
+        jQuery.post(ajaxurl,{action:'nggml_update_screen_options',nggml_screen_options:nggmlScreenOptions});
     });
-	jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox']").change(function(e){
-		if(this.checked){
-			if(this.value!=="0-nggml-all"){
-				jQuery("input[type='checkbox'][value='0-nggml-all']",this.parentNode).prop("checked",false);
-			}else{
-				jQuery("input[type='checkbox'][value!='0-nggml-all']",this.parentNode).prop("checked",false);
-			}
-		}
-		//jQuery("option[value='"+this.value+"']",jQuery(this.parentNode).next().get(0)).prop("selected",this.checked);
-		var checked=jQuery("input:checked",this.parentNode);
-		if(checked.size()){
-			checked.each(function(){
-				jQuery("option[value='"+this.value+"']",jQuery(this.parentNode).next().get(0)).prop("selected",this.checked);
-			});
-		}else{
-			jQuery("input[type='checkbox'][value='0-nggml-all']",this.parentNode).prop("checked",true);
-			jQuery("option[value='0-nggml-all']",jQuery(this.parentNode).next().get(0)).prop("selected",true);
-		}	
-	});
-	var clicked;
-	jQuery("select.nggml-filter option").click(function(e){
-		clicked=this;
-	});
-	jQuery("select.nggml-filter").change(function(e){
-		if(!clicked||clicked.parentNode!==this){return;}
-		if(clicked.selected){
-			if(clicked.value!=="0-nggml-all"){
-				jQuery("option[value='0-nggml-all']",this).prop("selected",false);
-			}else{
-				jQuery("option[value!='0-nggml-all']",this).prop("selected",false);
-			}
-		}
-		var selected=jQuery("option:selected",this);
-		if(!selected.size()){
-			jQuery("option[value='0-nggml-all']",this).prop("selected",true);
-		}
-		clicked=null;
-	});
+    select
+        .prop("multiple",!nggmlScreenOptions.use_checkbox_overlay_for_select)
+        .prop("size",!nggmlScreenOptions.use_checkbox_overlay_for_select?"4":"1");
+    var height=0;
+    var count=0;
+    jQuery("select.nggml-filter")
+        .mousedown(function(e){
+            if(jQuery("input#nggtags-for-ml-use-checkboxes-overlay").prop("checked")){
+                var overlay=jQuery("div.nggml-filter-checkbox-overlay",jQuery(this).prev());
+                if(overlay.css("display")==="none"){
+                    var offset=jQuery(this).outerHeight();
+                    overlay.width(jQuery(this).width()).css("top",offset).show();
+                    var parent=overlay.parent().parent();
+                    if(!height){height=parent.height();}
+                    var newHeight=offset+overlay.outerHeight()+20;
+                    if(newHeight>parent.height()){parent.height(newHeight);}
+                    ++count;
+                }
+                e.stopImmediatePropagation();
+                e.stopPropagation();
+                e.preventDefault();
+                e.returnValue=false;
+                return false;
+            }
+        });
+    jQuery("div.nggml-filter-checkbox-overlay button.nggml-button-close").click(function(e){
+        var overlay=jQuery(this).parents("div.nggml-filter-checkbox-overlay").hide();
+        if(!--count){overlay.parent().parent().height(height);}
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+        e.returnValue=false;
+        return false;
+    });
+    jQuery("div.nggml-filter-checkbox-overlay input[type='checkbox']").change(function(e){
+        if(this.checked){
+            if(this.value!=="0-nggml-all"){
+                jQuery("input[type='checkbox'][value='0-nggml-all']",this.parentNode).prop("checked",false);
+            }else{
+                jQuery("input[type='checkbox'][value!='0-nggml-all']",this.parentNode).prop("checked",false);
+            }
+        }
+        var checked=jQuery("input:checked",this.parentNode);
+        if(checked.size()){
+            checked.each(function(){
+                jQuery("option[value='"+this.value+"']",jQuery(this.parentNode).next().get(0)).prop("selected",this.checked);
+            });
+        }else{
+            jQuery("input[type='checkbox'][value='0-nggml-all']",this.parentNode).prop("checked",true);
+            jQuery("option[value='0-nggml-all']",jQuery(this.parentNode).next().get(0)).prop("selected",true);
+        }	
+    });
+    var clicked;
+    jQuery("select.nggml-filter option").click(function(e){
+        clicked=this;
+    });
+    jQuery("select.nggml-filter").change(function(e){
+        if(!clicked||clicked.parentNode!==this){return;}
+        if(clicked.selected){
+            if(clicked.value!=="0-nggml-all"){
+                jQuery("option[value='0-nggml-all']",this).prop("selected",false);
+            }else{
+                jQuery("option[value!='0-nggml-all']",this).prop("selected",false);
+            }
+        }
+        var selected=jQuery("option:selected",this);
+        if(!selected.size()){
+            jQuery("option[value='0-nggml-all']",this).prop("selected",true);
+        }
+        clicked=null;
+    });
+    jQuery("input#nggtags-for-ml-use-alt-media-list-pane").prop("checked",nggmlScreenOptions.use_alt_media_list_pane);
+    if(nggmlScreenOptions.use_alt_media_list_pane){showAltMediaListPane();}
+    jQuery("input#nggtags-for-ml-use-alt-media-list-pane").change(function(){
+        nggmlScreenOptions.use_alt_media_list_pane=this.checked?1:0;
+        jQuery.post(ajaxurl,{action:'nggml_update_screen_options',nggml_screen_options:nggmlScreenOptions});
+        this.checked?showAltMediaListPane():hideAltMediaListPane();
+    });
+    function showAltMediaListPane(){
+        var height=jQuery(window).height()
+            -jQuery("div#wpadminbar").outerHeight(true)
+            -jQuery("table.wp-list-table.widefat thead").outerHeight(true)
+            -jQuery("table.wp-list-table.widefat tbody#the-list tr[id|='post']").first().outerHeight(true);
+        var row=jQuery("tr#nggml-alt-media-list").css({padding:"0px",border:"0px",margin:"0px"}).height(height);
+        jQuery("td",row).css({padding:"0px",border:"0px",margin:"0px"});
+        var fieldset=jQuery("fieldset#nggml-alt-media-list-pane",row).css({padding:"0px",border:"0px",margin:"0px"})
+            .height(height);
+        var titles=jQuery("div#nggml-alt-media-list-titles",fieldset).height(height).get(0);
+        var images=jQuery("div#nggml-alt-media-list-images",fieldset).height(height).get(0);
+        jQuery("table.wp-list-table tbody#the-list tr[id|='post']").each(function(){
+            var checkbox=jQuery("th.check-column input[type='checkbox']",this).prop("disabled",true).get(0);
+            var id=this.id.substr(5);
+            var title=jQuery("td.title a",this).first().text();
+            var image=jQuery("td.media-icon a img",this).get(0);
+            var liCheckbox=document.createElement("input");
+            liCheckbox.id="nggml-li-checkbox-"+id;
+            liCheckbox.type="checkbox";
+            liCheckbox.name="media[]";
+            liCheckbox.value=checkbox.value;
+            liCheckbox.checked=checkbox.checked;
+            var li=document.createElement("li");
+            li.id="nggml-li-"+id;
+            li.className="nggml-image-title-box";
+            li.appendChild(liCheckbox);
+            li.appendChild(document.createTextNode(title));
+            titles.appendChild(li);
+            var div=document.createElement("div");
+            div.id="nggml-div-"+id;
+            div.className="nggml-image-icon-box";
+            div.style.width=image.width+"px";
+            div.style.height=image.height+"px";
+            div.style.position="relative";
+            var img=document.createElement("img");
+            img.id="nggml-img-"+id;
+            img.src=image.src;
+            img.width=image.width;
+            img.height=image.height;
+            div.appendChild(img);
+            var imgCheckbox=document.createElement("input");
+            imgCheckbox.id="nggml-img-checkbox-"+id;
+            imgCheckbox.type="checkbox";
+            imgCheckbox.value=checkbox.value;
+            imgCheckbox.checked=checkbox.checked;
+            imgCheckbox.style.position="absolute";
+            imgCheckbox.style.left="4px";
+            imgCheckbox.style.top="4px";
+            imgCheckbox.style.zIndex=100;
+            div.appendChild(imgCheckbox);
+            images.appendChild(div);
+            jQuery(this).hide();
+        });
+        jQuery("table.wp-list-table tbody#the-list tr[id|='post']").first().show();
+        var row=jQuery("tr#nggml-alt-media-list");
+        jQuery("table.widefat tbody").append(row);
+        row.show();
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box").hover(
+            function(){
+                jQuery(this).addClass("nggml-focused");
+                var id=this.id.substr(10);
+                var li=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
+                    .addClass("nggml-focused").get(0);
+                jQuery("table.wp-list-table tbody#the-list tr[id|='post']").hide();
+                jQuery("th.check-column input[type='checkbox'][id|='cb-select']",
+                    jQuery("table.wp-list-table tbody#the-list tr[id='post-"+id+"']").show())
+                    .prop("checked",jQuery("input[type='checkbox']",this).prop("checked"));
+                for(var i=0;i<4;i++){if(!(li=li.previousSibling)){break;}}
+                var titles=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles");
+                titles.scrollTop(li?jQuery(li).position().top+titles.scrollTop():0);
+            },
+            function(){
+                jQuery(this).removeClass("nggml-focused");
+                var id=this.id.substr(10);
+                jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
+                    .removeClass("nggml-focused");
+            }
+        );
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box").hover(
+            function(){
+                jQuery(this).addClass("nggml-focused");
+                var id=this.id.substr(9);
+                var div=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
+                    .addClass("nggml-focused").get(0);
+                jQuery("table.wp-list-table tbody#the-list tr[id|='post']").hide();
+                jQuery("th.check-column input[type='checkbox'][id|='cb-select']",
+                    jQuery("table.wp-list-table tbody#the-list tr#post-"+id).show())
+                    .prop("checked",jQuery("input[type='checkbox']",this).prop("checked"));
+                for(var i=0;i<4;i++){if(!(div=div.previousSibling)){break;}}
+                var images=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images");
+                images.scrollTop(div?jQuery(div).position().top+images.scrollTop():0);
+            },
+            function(){
+                jQuery(this).removeClass("nggml-focused");
+                var id=this.id.substr(9);
+                jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
+                    .removeClass("nggml-focused");
+            }
+        );
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
+            input[type='checkbox']").change(function(){
+            var id=this.id.substr(19);
+            jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles input#nggml-li-checkbox-"+id)
+                .prop("checked",this.checked);
+            jQuery("table.wp-list-table tbody#the-list tr#post-"+id+" input[type='checkbox']#cb-select-"+id)
+                .prop("checked",this.checked);
+        });
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box \
+            input[type='checkbox']").change(function(){
+            var id=this.id.substr(18);
+            jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images input#nggml-img-checkbox-"+id)
+                .prop("checked",this.checked);
+            jQuery("table.wp-list-table tbody#the-list tr#post-"+id+" input[type='checkbox']#cb-select-"+id)
+                .prop("checked",this.checked);
+        });
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box img")
+            .click(function(e){
+            if(e.target!==this){return;}
+            showOverlay(this.id.substr(10),this.src,"");
+        });
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box \
+            input[type='checkbox']").click(function(e){
+            e.stopPropagation();
+        });
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box")
+            .click(function(e){
+            if(e.target!==this){return;}
+            var id=this.id.substr(9);
+            var img=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
+                img#nggml-img-"+id);
+            showOverlay(id,img.get(0).src,"");
+        });
+        function showOverlay(id,src,text){
+            function append(div){
+                var container=document.createElement("div");
+                container.className="nggml-table-data";
+                var ths=jQuery("table.wp-list-table thead tr th");
+                var tds=jQuery("th,td",jQuery("table.wp-list-table tbody#the-list tr#post-"+id));
+                for(var i=0;i<tds.length;i++){
+                    var td=jQuery(tds.get(i));
+                    if(td.hasClass("check-column")||td.hasClass("column-icon")||td.hasClass("column-title")){continue;}
+                    var th=jQuery(ths.get(i));
+                    var span=document.createElement("span");
+                    span.className="nggml-column-name";
+                    span.textContent=(th.get(0).id!=="comments"?th.text():"Comments")+": ";
+                    var text=document.createTextNode(td.text());
+                    var p=document.createElement("p");
+                    p.appendChild(span);
+                    p.appendChild(text);
+                    container.appendChild(p);
+                    jQuery("div.nggml-overlay-left",div).append(container);
+                }
+            }
+            var controls=jQuery("div#nggml-overlay div.nggml-overlay-controls");
+            jQuery("p.nggml_actions",controls).remove();
+            var actions=jQuery("table.wp-list-table tbody#the-list tr#post-"+id+" td.column-title div.row-actions");
+            var p=document.createElement("p");
+            p.className="nggml_actions";
+            var a=document.createElement("a");
+            var a0=jQuery("span.edit a",actions).get(0);
+            a.href=a0.href;
+            a.textContent=a0.textContent;
+            p.appendChild(a);
+            p.appendChild(document.createTextNode("|"));
+            var a=document.createElement("a");
+            var a0=jQuery("span.delete a",actions).get(0);
+            a.className=a0.className;
+            a.onclick=function(){return showNotice.warn();};
+            a.href=a0.href;
+            a.textContent=a0.textContent;
+            p.appendChild(a);
+            p.appendChild(document.createTextNode("|"));
+            var a=document.createElement("a");
+            var a0=jQuery("span.view a",actions).get(0);
+            a.href=a0.href;
+            a.title=a0.title;
+            a.rel=a0.rel;
+            a.textContent=a0.textContent;
+            p.appendChild(a);
+            controls.prepend(p);
+            var div=jQuery("div#nggml-overlay div.nggml-overlay-container");
+            div.empty();
+            var img=document.createElement("img");
+            img.src=src;
+            div.append(img);
+            var p=document.createElement("p");
+            p.textContent="loading...";
+            div.append(p);
+            jQuery.get(ajaxurl,{action:'nggml_get_image',nggml_image_id:id},function(r){
+                var overlay=div.parents("div#nggml-overlay");
+                var overlayChromeHeight=overlay.outerHeight(true)-overlay.height();
+                var chromeHeight=div.outerHeight(true)-div.height();
+                div.empty();
+                div.html(r);
+                append(div);
+                var controlsHeight=controls.outerHeight(true);
+                div.height(Math.floor(0.9*jQuery(window).height())-overlayChromeHeight-controlsHeight-chromeHeight);
+            },"html");
+            div.parents("div#nggml-overlay").toggle();
+        }
+        jQuery("div#nggml-overlay div.nggml-overlay-controls button.nggml-button-close").click(function(){
+            jQuery(this).parents("div#nggml-overlay").hide();
+        });
+    }
+    function hideAltMediaListPane(){
+        var tr=jQuery("tr#nggml-alt-media-list").hide();
+        var fieldset=jQuery("fieldset#nggml-alt-media-list-pane",tr);
+        var titles=jQuery("div#nggml-alt-media-list-titles",fieldset);
+        jQuery("table.wp-list-table tbody#the-list tr[id|='post']").each(function(){
+            jQuery(this).show();
+            jQuery("th.check-column input[type='checkbox']",this).prop("disabled",false)
+                .prop("checked",jQuery("input[type='checkbox']#nggml-li-checkbox-"+this.id.substr(5),titles).prop("checked"));
+        });
+        titles.empty();
+        jQuery("div#nggml-alt-media-list-images",fieldset).empty();
+    }
+    jQuery("input[type='checkbox'][id|='cb-select-all']").change(function(){
+        var fieldset=jQuery("tr#nggml-alt-media-list fieldset#nggml-alt-media-list-pane");
+        jQuery("div#nggml-alt-media-list-titles input[type='checkbox']",fieldset).prop("checked",this.checked);
+        jQuery("div#nggml-alt-media-list-images input[type='checkbox']",fieldset).prop("checked",this.checked);
+    });
     jQuery(".hide-column-tog").click(function(){
         var t=jQuery(this),column=t.val();
         var select_filter=null;
@@ -239,7 +482,7 @@ tagBox = {
         var container=jQuery('div#nggml-bulk-priority-edit-images').get(0);
         jQuery(container).empty();
         var height=0;
-        jQuery('tbody#the-list td.media-icon img').each(function(){
+        jQuery('table.wp-list-table tbody#the-list td.media-icon img').each(function(){
             var post = jQuery(this).parents('tr').get(0).id.substr(5);
             if(posts.indexOf(post)!==-1){
                 var slot=document.createElement("div");
