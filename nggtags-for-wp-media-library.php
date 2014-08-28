@@ -524,16 +524,31 @@ add_filter( 'post_limits_request', function ( $limits ) {
     return $limits;
 } );
 
-add_action( 'wp_ajax_update_nggml_screen_options', function ( ) {
-	#$nggml_screen_options = json_decode( $_POST['nggml_screen_options'] );
-	# make sure numbers are stored as numbers not strings
-	$nggml_screen_options = array_map( function( $v ) { return is_numeric($v) ? intval($v) : $v; },
-		$_POST['nggml_screen_options'] );
-	update_option( 'nggml_screen_options', $nggml_screen_options );
-	die();
+add_action( 'wp_ajax_nggml_update_screen_options', function( ) {
+    #$nggml_screen_options = json_decode( $_POST['nggml_screen_options'] );
+    # make sure numbers are stored as numbers not strings
+    $nggml_screen_options = array_map( function( $v ) { return is_numeric($v) ? intval($v) : $v; },
+        $_POST['nggml_screen_options'] );
+    update_option( 'nggml_screen_options', $nggml_screen_options );
+    die();
+});
+
+add_action( 'wp_ajax_nggml_get_image', function( ) {
+    $id = (integer) $_GET['nggml_image_id'];
+    $image = get_post( $id, OBJECT );
+?>
+<div class="nggml-overlay-right">
+    <?php echo wp_get_attachment_image( $id, 'full' ); ?>
+</div>
+<div class="nggml-overlay-left">
+    <h1><?php echo get_the_title( $id ); ?></h1>
+    <div class="nggml-overlay-caption"><p><?php echo $image->post_excerpt; ?></p></div>
+    <div class="nggml-overlay-description"><p><?php echo $image->post_content; ?></p></div>
+</div>
+<?php
+    die();
 });
 
 include_once( dirname( __FILE__ ) . '/nggtags-search-widget.php' );
-
 
 ?>

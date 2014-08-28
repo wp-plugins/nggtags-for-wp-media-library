@@ -31,13 +31,13 @@ $pagenum = $wp_list_table->get_pagenum();
 $doaction = $wp_list_table->current_action();
 
 if ( $doaction ) {
-	check_admin_referer('bulk-media');
+    check_admin_referer('bulk-media');
 
     # Start of injected NGG Tags code that supports bulk addition/removal of taxonomy tags
   
     if ( 'add-tags' === $doaction ) {
         $ids = $_REQUEST['media'];
-		foreach ( get_object_taxonomies( 'attachment' ) as $taxonomy_name ) {
+        foreach ( get_object_taxonomies( 'attachment' ) as $taxonomy_name ) {
             $taxonomy = get_taxonomy( $taxonomy_name );
             if ( !$taxonomy->show_ui || $taxonomy->hierarchical ) { continue; }
             $current = explode( ',', $_REQUEST['tax_input'][$taxonomy->name] );
@@ -53,17 +53,17 @@ if ( $doaction ) {
                 wp_set_post_terms( $id, $added, $taxonomy->name, true );
                 wp_remove_object_terms( $id, $removed, $taxonomy->name );
             }
-		}
+        }
     } else if ( 'edit-priority' === $doaction ) {
         $start = $_REQUEST['nggml-bulk-priority-edit-start'];
         $increment =  $_REQUEST['nggml-bulk-priority-edit-increment'];
         if ( !is_numeric( $start ) || !is_numeric( $increment ) ) {
-			wp_die( __( 'Invalid start or increment value.' ) );
+            wp_die( __( 'Invalid start or increment value.' ) );
         }
         $start = (integer) $start;
         $increment = (integer) $increment;
         if ( $start <= 0 || $increment <= 0 ) {
-			wp_die( __( 'Invalid start or increment value.' ) );
+            wp_die( __( 'Invalid start or increment value.' ) );
         }        
         $order = $_REQUEST['nggml-bulk-priority-edit-order'];
         if ( $order !== 'reverted' ) {
@@ -276,9 +276,9 @@ wp_enqueue_script( 'media' );
 
 # Start of injected NGG Tags code that loads my client side javascripts
 wp_enqueue_style( 'nggtags-media', plugins_url( 'nggtags-media.css', __FILE__ ) );
-wp_enqueue_script( 'nggtags-media', plugins_url( 'nggtags-media.js', __FILE__ ), array( 'jquery' ) );
 wp_enqueue_script( 'inline-edit-nggtags-media', plugins_url( 'inline-edit-nggtags-media.js', __FILE__ ),
     array( 'jquery', 'suggest', 'heartbeat' ) );
+wp_enqueue_script( 'nggtags-media', plugins_url( 'nggtags-media.js', __FILE__ ), array( 'jquery' ) );
 # End of injected NGG Tags code that loads my client side javascripts
 
 add_screen_option( 'per_page', array('label' => _x( 'Media items', 'items per page (screen options)' )) );
@@ -382,7 +382,7 @@ if ( !empty($message) ) { ?>
 
 <?php
 $nggml_screen_options = json_encode( (object) get_option( 'nggml_screen_options',
-	[ 'use_checkbox_overlay_for_select' => 1 ] ) );
+	[ 'use_checkbox_overlay_for_select' => 1, 'use_alt_media_list_pane' => 1 ] ) );
 ?>
 
 <form>
