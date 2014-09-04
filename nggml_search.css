@@ -6,14 +6,26 @@ form.nggml-search-fields-form{
     background-color:#e8e8e8;
 }
 
-div#nggml-search-fields-help{
-    background-color:#c0c0c0;
-    width:25%;
-    float:right;
+div#nggml-search-fields-help,div.nggml-search-fields-show-button{
+    color:black;
+    font-size:10px;
+    font-weight:bold;
+    text-align:center;
+    background-color:#d7d7d7;
+    width:4em;
+    padding:0px 2px;
     border:2px solid black;
     border-radius:7px;
-    text-align:center;
-    margin:5px;
+    margin:0px;
+    float:right;
+}
+
+h2.nggml-search-fields-title{
+    display:inline;
+}
+
+div#nggml-search-fields-help:hover,div.nggml-search-fields-show-button:hover{
+    background-color:white;
 }
 
 div.nggml-search-fields{
@@ -29,15 +41,6 @@ span.nggml-search-fields-field-label{
     float:left;
 }
 
-button.nggml-search-fields-show-button{
-    font-size:10px;
-    font-weight:bold;
-    padding:3px;
-    border:1px solid black;
-    border-radius:7px;
-    float:right;
-}
-
 input.nggml-search-fields-for-input{
     width:90%;
 }
@@ -51,6 +54,91 @@ div.nggml-search-fields-and-or-box{
 
 input#nggml-search-fields-submit,input#nggml-search-fields-reset{
     color:black;
+    font-size:10px;
+    font-weight:bold;
+    text-align:center;
+    background-color:#d7d7d7;
+    padding:0px 5px;
     border:2px solid black;
     border-radius:7px;
+    margin:0px;
+}
+
+input#nggml-search-fields-submit:hover,input#nggml-search-fields-reset:hover{
+    background-color:white;
+}
+
+div.nggml-alt-gallery-controls{
+    text-align:right;
+    padding:10px;
+}
+
+button#nggml-alt-gallery-show{
+    /* To hide High Density Gallery Button set display to none */
+    /*display:none;*/
+    color:black;
+    font-size:10px;
+    font-weight:bold;
+    text-align:center;
+    background-color:#d7d7d7;
+    padding:0px 5px;
+    border:2px solid black;
+    border-radius:7px;
+    margin:0px;
+}
+
+button#nggml-alt-gallery-unfocused{
+    display:none;
+    background-color:#f0f0f0;
+}
+
+button#nggml-alt-gallery-focused{
+    display:none;
+    /* the following sets the highlight color of the focused element */
+    background-color:magenta;
+}
+
+div.nggml-alt-gallery-container{
+    position:absolute;
+    left:0px;
+    top:0px;
+    z-index:1000;
+    background-color:#f0f0f0;
+    overflow:hidden;
+}
+
+div.nggml-alt-gallery-titles{
+    width:30%;
+    float:right;
+    background-color:#f0f0f0;
+    border-width:0px;/*2px 2px 2px 2px;*/
+    border-style:solid;
+    border-color:black;
+    overflow-y:auto;
+}
+
+div.nggml-alt-gallery-titles li{
+    color:black;
+    font-weight:bold;
+    list-style-type:none;
+    padding:2px 5px;
+}
+
+div.nggml-alt-gallery-icons{
+    width:69%;
+    float:left;
+    background-color:#f0f0f0;
+    border-width:0px;/*2px 2px 2px 2px;*/
+    border-style:solid;
+    border-color:black;
+    overflow-y:auto;
+}
+
+div.nggml-alt-gallery-icons img{
+    padding:0px;
+    border-width:7px;
+    border-style:solid;
+    border-color:#f0f0f0;
+    margin:0px;
+    float:left;
 }
