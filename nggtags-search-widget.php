@@ -64,14 +64,14 @@ class Search_Media_Library_by_Taxonomy_Widget extends WP_Widget {
     value="<?php echo $this->option_name; ?>">
 <input id="search_media_library_for_nggtags_widget_number" name="search_media_library_for_nggtags_widget_number" type="hidden"
     value="<?php echo $this->number; ?>">
-<h2>Search Media Library</h2>
 <div id="nggml-search-fields-parameters">
 <div id="nggml-search-fields-help">
 <a href="http://nggtagsforwpml.wordpress.com/a-widget-for-searching-the-media-library-by-taxonomy/#user"
     target="_blank">help</a>
 </div>
+<h2 class="nggml-search-fields-title">Search Images</h2>
 <p style="clear:both;margin:0px;">
-<h4>Please specify search conditions:</h4>
+<h4>Specify search conditions:</h4>
 <?php
         $selected = $instance['attachment'];
         $SQL_LIMIT = (integer) $instance['maximum_number_of_items'];
@@ -113,7 +113,7 @@ EOD;
 ?>
 <div class="nggml-search-fields">
 <span class="nggml-search-fields-field-label"><?php echo $taxonomy->label ?>:</span>
-<button class="nggml-search-fields-show-button">Open</button>
+<div class="nggml-search-fields-show-button">Open</div>
 <div style="clear:both;"></div>
 <div class="nggml-search-fields-values" style="display:none;">
 <?php
@@ -144,7 +144,7 @@ EOD;
 ?>
 <div class="nggml-search-fields">
 <span class="nggml-search-fields-field-label"><?php echo $field['label'] ?>:</span>
-<button class="nggml-search-fields-show-button">Open</button>
+<div class="nggml-search-fields-show-button">Open</div>
 <div style="clear:both;"></div>
 <div class="nggml-search-fields-values" style="display:none;">
 <?php
@@ -229,7 +229,7 @@ of the search conditions.
 </div>
 </form>
 <script type="text/javascript">
-jQuery("button.nggml-search-fields-show-button").click(function(event){
+jQuery("div.nggml-search-fields-show-button").click(function(event){
     if(jQuery(this).text()=="Open"){
         jQuery(this).text("Close");
         jQuery("div.nggml-search-fields-values",this.parentNode).css("display","block");
@@ -240,11 +240,18 @@ jQuery("button.nggml-search-fields-show-button").click(function(event){
     return false;
 });
 jQuery("div.nggml-search-fields-values input[type='checkbox']").change(function(){
-	this.parentNode.parentNode.style.backgroundColor=jQuery("input[type='checkbox']:checked",this.parentNode).size()
-		?"white":this.parentNode.parentNode.parentNode.style.backgroundColor;
+	this.parentNode.parentNode.style.backgroundColor=(jQuery("input[type='checkbox']:checked",this.parentNode).size()
+      +jQuery("input[type='text']",this.parentNode).filter(function(){return jQuery(this).val();}).size())
+    ?"white":this.parentNode.parentNode.parentNode.style.backgroundColor;
+});
+jQuery("div.nggml-search-fields-values input[type='text']").change(function(){
+	this.parentNode.parentNode.style.backgroundColor=(jQuery("input[type='checkbox']:checked",this.parentNode).size()
+      +jQuery("input[type='text']",this.parentNode).filter(function(){return jQuery(this).val();}).size())
+    ?"white":this.parentNode.parentNode.parentNode.style.backgroundColor;
 });
 jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
 	jQuery("div.nggml-search-fields-values input[type='checkbox']").prop("checked",false);
+	jQuery("div.nggml-search-fields-values input[type='text']").val("");
 	jQuery("div.nggml-search-fields").css("background-color",
 		jQuery("div#nggml-search-fields-parameters").css("background-color"));
 });

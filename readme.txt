@@ -3,7 +3,7 @@ Contributors: Magenta Cuda
 Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 3.6
 Tested up to: 3.9.1
-Stable tag: 0.8
+Stable tag: 0.8.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 10. High Density Media Library View
 
 == Changelog ==
+= 0.8.1 =
+* added optional high density view to WordPress standard gallery
 = 0.8 =
 * added optional high density media list view
 = 0.7.1.1 =
@@ -68,6 +70,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.8.1 =
+* added optional high density view to WordPress standard gallery
 = 0.8 =
 * added optional high density media list view
 = 0.7.1.1 =

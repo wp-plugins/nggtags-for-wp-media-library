@@ -400,10 +400,15 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         $script = <<<EOT
 <script type="text/javascript">
     // install a click handler to show the corresponding gallery
-    jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function() {
+    jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function(e) {
         jQuery( "div#div-album-$count" ).css( "display", "none" );        
         jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
         jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) ).css( "display", "block" );
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+        e.returnValue=false;
+        return false;
     } );
     // install a buttun click handler to go back to album view
     jQuery( "div#div-galleries-$count button.button-back" ).click( function() {
@@ -550,5 +555,12 @@ add_action( 'wp_ajax_nggml_get_image', function( ) {
 });
 
 include_once( dirname( __FILE__ ) . '/nggtags-search-widget.php' );
+
+if ( !is_admin() ) {
+    add_action( 'wp_enqueue_scripts', function() {
+        wp_enqueue_style( 'nggml_search', plugins_url( 'nggml_search.css', __FILE__ ) );
+        wp_enqueue_script( 'nggml-search', plugins_url( 'nggml-search.js', __FILE__ ), array( 'jquery' ) );
+    } );
+}
 
 ?>
