@@ -261,7 +261,7 @@ jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
     
     public function update( $new, $old ) {
         return array_map( function( $values ) {
-            return is_array( $values) ? array_map( strip_tags, $values ) : strip_tags( $values );
+            return is_array( $values) ? array_map( 'strip_tags', $values ) : strip_tags( $values );
         }, $new );
     }
     
@@ -282,7 +282,7 @@ jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
         $sql = <<<EOD
             SELECT taxonomy, count(*) count
                 FROM (SELECT x.taxonomy, r.object_id
-                    FROM wp_term_relationships r, wp_term_taxonomy x, wp_terms t, wp_posts p
+                    FROM $wpdb->term_relationships r, $wpdb->term_taxonomy x, $wpdb->terms t, $wpdb->posts p
                     WHERE r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id AND r.object_id = p.ID
                         AND p.post_type = 'attachment' AND p.post_mime_type LIKE 'image/%'
                     GROUP BY x.taxonomy, r.object_id) d 
@@ -290,7 +290,7 @@ jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
 EOD;
         $db_taxonomies = $wpdb->get_results( $sql, OBJECT );
         $wp_taxonomies = get_taxonomies( '', 'objects' );
-        $selected = $instance['attachment'];
+        $selected = array_key_exists( 'attachment', $instance ) ? $instance['attachment'] : [];
 ?>
 <div class="scpbcfw-search-fields">
 <div class="scpbcfw-search-field-values" style="display:block;">
@@ -419,7 +419,8 @@ jQuery(document).ready(function(){
             }
             return $arr;
         }
-        return FALSE;
+        $arr = false;
+        return $arr;
     }
 }
 
@@ -586,7 +587,6 @@ EOD
         if ( array_key_exists( 'pst-std-post_author', $_REQUEST ) && $_REQUEST['pst-std-post_author'] ) {
             $sql = "SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%'"
                 . ' AND post_author IN ( ' . implode( ',', $_REQUEST['pst-std-post_author'] ) . ' )';
-EOD;
             $ids4 = $wpdb->get_col( $sql );
             if ( $and_or == 'AND' && !$ids4 ) { return ' AND 1 = 2 '; }
         } else {
@@ -598,7 +598,6 @@ EOD;
         if ( array_key_exists( 'pst-std-post_parent', $_REQUEST ) && $_REQUEST['pst-std-post_parent'] ) {
             $sql = "SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%'"
                 . ' AND post_parent IN ( ' . implode( ',', $_REQUEST['pst-std-post_parent'] ) . ' )';
-EOD;
             $ids5 = $wpdb->get_col( $sql );
             if ( $and_or == 'AND' && !$ids5 ) { return ' AND 1 = 2 '; }
         } else {

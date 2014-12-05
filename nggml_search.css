@@ -102,14 +102,16 @@ div.nggml-alt-gallery-container{
     position:absolute;
     left:0px;
     top:0px;
+    width:100%;
     z-index:1000;
     background-color:#f0f0f0;
     overflow:hidden;
 }
 
 div.nggml-alt-gallery-titles{
-    width:30%;
+    width:25%;
     float:right;
+    font-size:smaller;
     background-color:#f0f0f0;
     border-width:0px;/*2px 2px 2px 2px;*/
     border-style:solid;
@@ -125,7 +127,7 @@ div.nggml-alt-gallery-titles li{
 }
 
 div.nggml-alt-gallery-icons{
-    width:69%;
+    width:74%;
     float:left;
     background-color:#f0f0f0;
     border-width:0px;/*2px 2px 2px 2px;*/

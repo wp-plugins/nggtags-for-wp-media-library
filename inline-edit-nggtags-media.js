@@ -66,11 +66,17 @@ inlineEditPost = {
 		$('#doaction, #doaction2').click(function(e){
 			var n = $(this).attr('id').substr(2);
 			var a = $( 'select[name="' + n + '"]' ).val();
+            if ( 'delete' === a ) {
+                if ( !confirm( "You are about to permanently delete these items.\n  'Cancel' to stop, 'OK' to delete." ) ) {
+                    e.preventDefault();
+                    return;
+                }
+            }
 			if ( 'add-tags' === a || 'edit-priority' === a ) {
 				e.preventDefault();
 				t.setBulk(a);
                 if ( 'add-tags' === a ) {
-                    tagBox.cleanTags();
+                    tagBox.cleanTagsInitial();
                 } else if ( 'edit-priority' === a ) {
                     var reorder=tagBox.cleanImages();
                     jQuery('div#nggml-bulk-priority-edit-button-reorder').click(function(e){

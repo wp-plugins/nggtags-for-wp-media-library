@@ -34,6 +34,7 @@ trait Magic_Fields_2_Toolkit_Post_Filters {
         # this is a post specifier of the form - post_type:taxonomy1:tag1,tag2,-tag3;taxonomy2:tag4,-tag5,tag6,tag7 ...
         #error_log( '##### Magic_Fields_2_Toolkit_Post_Filters::get_posts_with_spec:$matches=' . print_r( $matches, TRUE ) );
         $post_type = $matches[1];
+        $limit = null;
         if ( !empty( $matches[13] ) ) { $limit = $matches[13]; }
         if ( empty( $matches[3] ) ) {
             return $wpdb->get_col( "SELECT ID FROM $wpdb->posts WHERE post_type = '$post_type'" . ( $limit ? " LIMIT $limit" : '' ) );
