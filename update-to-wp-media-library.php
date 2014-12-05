@@ -249,7 +249,7 @@ jQuery("#ntfwml_update_button").click( function() {
                     $options['messages'][] = $uploads['error'];
                     return false;
                 }
-                $uploads[path] = str_replace( '\\', '/', $uploads[path] );
+                $uploads['path'] = str_replace( '\\', '/', $uploads['path'] );
                 $file_atts = wp_check_filetype_and_ext( $file, basename( $file ) );
                 if ( !empty( $file_atts['proper_filename'] ) ) {
                     $new_file_name = $file_atts['proper_filename'];
@@ -443,7 +443,7 @@ EOD
                     $first_id = key( $options['term_relationships'] );
                     $count = 0;
                     foreach ( $options['term_relationships'] as $pid => &$term_ids ) {
-                        if ( $new_pid = $new_pids[$pid]->post_id ) {
+                        if ( array_key_exists( $pid, $new_pids) and $new_pid = $new_pids[$pid]->post_id ) {
                             $int_term_ids = array_map( function ( $value ) { return (integer) $value; }, $term_ids );
                             wp_set_post_terms( $new_pid, $int_term_ids, 'ngg_tag' );
                             $term_ids = null;

@@ -32,7 +32,8 @@ $ntfwml_ngg_galleries = $wpdb->prefix . 'ngg_gallery';
 
 // Are there any NextGEN Gallery pictures?
 
-$ntfwml_ngg_pictures_count = $wpdb->get_var( "SELECT COUNT(*) FROM $ntfwml_ngg_pictures" );
+$tables = $wpdb->get_col( "SHOW TABLES LIKE '$ntfwml_ngg_pictures'" );
+$ntfwml_ngg_pictures_count = !$tables ? 0 : $wpdb->get_var( "SELECT COUNT(*) FROM $ntfwml_ngg_pictures" );
 
 // What is the current state of the update?
 
@@ -50,7 +51,7 @@ if ( $ntfwml_ngg_pictures_count && ( !$ntfwml_options || !isset( $ntfwml_options
 
 add_action( 'admin_init', function () {
     global $max_taxonomies;
-    add_settings_section( 'nggtags_for_media_library_settings_section', 'Settings for nggtags for Media Library',
+    add_settings_section( 'nggtags_for_media_library_settings_section', 'Tags for Media Library Settings',
         function () {
 ?>
 <div style="margin:10px 20px;padding:5px 10px;font-size:smaller;">
@@ -105,10 +106,22 @@ These options will automatically be added to the corresponding shortcodes in you
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
+    # settings field for alt high density gallery view
+    add_settings_field( 'nggml_alt_high_density_gallery_image_width', 'high density gallery view image width',
+        function () {
+?>
+<input id="nggml_alt_high_density_gallery_image_width" name="nggml_alt_high_density_gallery_image_width"
+    type="number" min="16" max="1024" size="40"
+    value='<?php echo get_option( 'nggml_alt_high_density_gallery_image_width', '64' ); ?>' />
+<?php
+            echo '&nbsp;&nbsp;for the user (not admin) high density gallery view';
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'singlepic_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'search_results_for_media_library_gallery_options' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_image_width' );
     
     add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
         function () {
@@ -213,7 +226,7 @@ add_action( 'admin_init', function () {
 }, 1 );
 
 add_action( 'admin_menu', function () {
-    add_options_page( 'Settings for nggtags for Media Library', 'nggtags for Media Library',
+    add_options_page( 'Tags for Media Library Settings', 'Tags for Media Library',
         'manage_options', 'nggtags_for_media_library_settings_page', function () {
         echo( '<form method="post" action="options.php">' );
         settings_fields( 'nggtags_for_media_library_settings' ); 
@@ -221,13 +234,10 @@ add_action( 'admin_menu', function () {
         submit_button();
         echo( '</form>' );
     } );
-    #add_media_page( 'Library for NGG Tags', 'Library for NGG Tags', 'edit_posts', 'library-for-nggtags', function() {
-    #    wp_redirect( plugins_url( 'up_load.php', __FILE__ ) );
-    #} );
-    add_menu_page( 'Media Library for NGG Tags', 'Media for NGG Tags', 'edit_posts', 'nggtags-for-wp-media-library/upload.php',
-        '', '', '10.1' );
+    add_media_page( 'Tags for Media Library', 'Tags for Media Library', 'edit_posts',
+        'nggtags-for-wp-media-library/upload.php' );
 }, 11 );
-    
+        
 add_filter( 'plugin_action_links', function ( $actions, $plugin_file, $plugin_data, $context ) {
     if ( strpos( $plugin_file, basename( __FILE__ ) ) !== false ) {
         array_unshift( $actions, '<a href="' . admin_url( 'options-general.php?page=nggtags_for_media_library_settings_page' ) . '">'
@@ -287,16 +297,20 @@ class Nggtags_for_Media_Library {
 
 function sort_ids_by_priority( $ids ) {
     global $wpdb;
+    if ( !$ids ) { return $ids; }
     # get the priorities which are tags in the priority taxonomy 
     $list_ids = implode( ',', $ids );
     $sort_order = $wpdb->get_results( <<<EOD
-SELECT r.object_id, t.name priority FROM $wpdb->terms t, $wpdb->term_taxonomy x, $wpdb->term_relationships r
+SELECT r.object_id id, t.name priority FROM $wpdb->terms t, $wpdb->term_taxonomy x, $wpdb->term_relationships r
     WHERE t.term_id = x.term_id AND x.term_taxonomy_id = r.term_taxonomy_id AND x.taxonomy = 'priority'
         AND r.object_id IN ( $list_ids )       
 EOD
         , OBJECT_K );
     uasort( $sort_order, function( $a, $b ) {
-        return $a->priority == $b->priority ? 0 : $a->priority < $b->priority ? -1 : 1;
+        if ( $a->priority == $b->priority ) {
+            return $a->id == $b->id ? 0 : $a->id < $b->id ? -1 : 1;
+        }
+        return $a->priority < $b->priority ? -1 : 1;
     } );
     $sorted_ids = array_keys( $sort_order );
     // now append those ids that don't have a priority
@@ -477,7 +491,9 @@ add_shortcode( 'singlepic', function ( $atts, $content, $tag ) {
 
 function is_nggtags_media_library_request() {
     if ( strpos( $_SERVER['SCRIPT_NAME'], '/upload.php' ) === false ) { return false; }
-    if ( $_REQUEST['action'] != -1 || $_REQUEST['action2'] != -1 ) { return false; }
+    if ( !$_REQUEST || ( array_key_exists( 'action', $_REQUEST ) && $_REQUEST['action'] != -1 )
+        || ( array_key_exists( 'action2', $_REQUEST ) && $_REQUEST['action2'] != -1 ) ) { return false; }
+    if ( !array_key_exists( 's', $_REQUEST ) ) { return false; }
     if ( !( strpos( $_REQUEST['s'], 'tags:' ) === 0 ) && !( strpos( $_REQUEST['s'], 'gallery:' ) === 0 ) ) {
         return false;
     }    
@@ -554,12 +570,29 @@ add_action( 'wp_ajax_nggml_get_image', function( ) {
     die();
 });
 
+add_action( 'wp_ajax_nggml_get_media_table_rows', function( ) {
+    global $wp_query;
+    require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
+    require_once( ABSPATH . 'wp-admin/includes/class-wp-media-list-table.php' );
+    require_once( dirname( __FILE__ ) . '/class-wp-media-list-table-for-nggtags.php' );
+    $GLOBALS['hook_suffix']="nggtags-for-wp-media-library/upload.php";
+    $wp_list_table = new \WP_Media_List_Table_for_Ngg_Tags( null );
+    $wp_list_table->is_trash = false;
+    query_posts( [ 'post_type' => 'attachment', 'post__in' => $_REQUEST['data'], 'post_status' => 'inherit',
+        'posts_per_page' => -1 ] );
+    $wp_list_table->display_rows();
+    die;
+} );
+
 include_once( dirname( __FILE__ ) . '/nggtags-search-widget.php' );
 
 if ( !is_admin() ) {
     add_action( 'wp_enqueue_scripts', function() {
+        global $wp_scripts;
         wp_enqueue_style( 'nggml_search', plugins_url( 'nggml_search.css', __FILE__ ) );
         wp_enqueue_script( 'nggml-search', plugins_url( 'nggml-search.js', __FILE__ ), array( 'jquery' ) );
+        $wp_scripts->add_data( 'nggml-search', 'data', 'var nggmlAltGalleryImageWidth='
+            . get_option( 'nggml_alt_high_density_gallery_image_width', '64' ) . ';' );
     } );
 }
 

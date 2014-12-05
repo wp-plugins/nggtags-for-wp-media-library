@@ -1,23 +1,25 @@
-=== nggtags for WordPress Media Library ===
-Contributors: Magenta Cuda
-Tags: NextGEN Gallery,nggtags,convertor,alternative,replacement
-Requires at least: 3.6
-Tested up to: 3.9.1
-Stable tag: 0.8.1
+=== Tags for Media Library ===
+Contributors: Black 68 Charger,Magenta Cuda
+Tags: taxonomy tags,media library,NextGEN Gallery,nggtags,convertor,alternative,replacement
+Requires at least: 4.0
+Tested up to: 4.1
+Stable tag: 0.8.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Converts NextGEN Gallery images to WordPress Media Library images. Has an alternative implementation of NextGEN Gallery's nggtags shortcode.
+Features for using taxonomy tags with Media Library. Also converts NextGEN Gallery images to WordPress Media Library images.
 
 == Description ==
-This plugin first converts NextGEN Gallery's image database to a WordPress Media Library image database. After the conversion NextGEN Gallery images and galleries have become WordPress Media Library images and galleries. NextGEN albums are ignored. A WordPress taxonomy 'ngg_tag' is created and the NextGEN Gallery image tags are saved in this taxonomy. This plugin also directly implements the 'nggtags' shortcode so post content with the 'nggtags' shortcode will still work without editing the post content. NextGEN Gallery's sortorder is implemented using a tag taxonomy to hold priorities. The website for this plugin is [here](http://nggtagsforwpml.wordpress.com/). **This plugin works with NextGEN Gallery 1.9.13 and requires at least PHP 5.4.**
+TLM - Tags for Media Library - was originally developed for porting NextGEN Gallery 1.9 to WordPress Media Library but has evolved into something that may be useful to anyone trying to use taxonomy tags on WordPress Media Library items. TLM supports [dynamically generating galleries](http://nggtagsforwpml.wordpress.com/#nggtags) using a criteria based on taxonomy tags, [multiple tag taxonomies](http://nggtagsforwpml.wordpress.com/#additional-taxonomies) for media items, [bulk assignment/removal](http://nggtagsforwpml.wordpress.com/#bulk-tag-edit) of taxonomy tags to/from media items, filtering the Media Library [by taxonomy tags](http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags), sorting the media items based on a [priority tag](http://nggtagsforwpml.wordpress.com/#bulk-priority-edit), a [search widget](http://nggtagsforwpml.wordpress.com/a-widget-for-searching-the-media-library-by-taxonomy) for media items using a criteria based on taxonomy tags and an [alternate high density view](http://nggtagsforwpml.wordpress.com/#hi-density-media-library) of the Media Library. The website for this plugin is [here](http://nggtagsforwpml.wordpress.com/).  **This version requires WordPress 4.0 and PHP 5.4.**
+
+For NextGEN Gallery 1.9 users: This plugin first converts NextGEN Gallery's image database to a WordPress Media Library image database. After the conversion NextGEN Gallery images and galleries have become WordPress Media Library images and galleries. NextGEN albums are ignored. A WordPress taxonomy 'ngg_tag' is created and the NextGEN Gallery image tags are saved in this taxonomy. This plugin also directly implements the 'nggtags' shortcode so post content with the 'nggtags' shortcode will still work without editing the post content. NextGEN Gallery's sortorder is implemented using a tag taxonomy to hold priorities. **This plugin works with NextGEN Gallery 1.9.13.**
 
 == Installation ==
 1. Upload 'nggtags-for-wp-media-library to the '/wp-content/plugins' directory.
-2. Backup your MySQL WordPress tables.
-3. Deactivate NextGEN Gallery.
+2. For NextGEN Gallery 1.9 users: Backup your MySQL WordPress tables.
+3. For NextGEN Gallery 1.9 users: Deactivate NextGEN Gallery.
 4. Activate this plugin through the 'Plugins' menu in WordPress.
-5. Run the conversion utility using the Dashboard menu item 'nggtags for Media Library'.
+5. For NextGEN Gallery 1.9 users: Run the conversion utility using the Dashboard menu item 'nggtags for Media Library'.
 
 == Frequently Asked Questions ==
 = What if you do not have NextGEN Gallery installed? =
@@ -36,6 +38,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 10. High Density Media Library View
 
 == Changelog ==
+= 0.8.1.1 =
+* enhanced to work better with WordPress 4.0
 = 0.8.1 =
 * added optional high density view to WordPress standard gallery
 = 0.8 =
@@ -70,6 +74,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.8.1.1 =
+* enhanced to work better with WordPress 4.0
 = 0.8.1 =
 * added optional high density view to WordPress standard gallery
 = 0.8 =

@@ -10,6 +10,8 @@ altGallery={
         divGallery=divGallery.filter(function(){
             if(jQuery("dl.gallery-item dt.gallery-icon a",this).length){
                 return true;
+            }else if(jQuery("figure.gallery-item div.gallery-icon a",this).length){
+                return true;
             }else{
                 jQuery("dl.gallery-item dt.gallery-icon img",this).removeAttr("data-orig-file")
                     .removeAttr("data-medium-file").removeAttr("data-large-file");
@@ -35,7 +37,8 @@ altGallery={
             divGallery.before(divControls);
             self1.extract(divGallery);
             var divAltGallery=self1.recreate();
-            divAltGallery.style.zIndex=-1000;
+            divAltGallery.style.zIndex=1000;
+            divAltGallery.style.display="none";
             divGallery.append(divAltGallery);
             jQuery(button).click(function(){
                 if(this.textContent==="Show High Density Gallery View"){
@@ -47,10 +50,10 @@ altGallery={
                     var divGalleryHeight=divGallery.height();
                     var divAltGalleryHeight=jQuery(divAltGallery).height();
                     if(divAltGalleryHeight<divGalleryHeight){jQuery(divAltGallery).height(divGalleryHeight);}
-                    divAltGallery.style.zIndex=1000;
+                    divAltGallery.style.display="block";
                     this.textContent="Show Standard WordPress Gallery View";
                 }else{
-                    divAltGallery.style.zIndex=-1000;
+                    divAltGallery.style.display="none";
                     this.textContent="Show High Density Gallery View";
                 }
             });
@@ -63,6 +66,7 @@ altGallery.gallery.prototype.image=function(src,href,text,dl){
     this.href=href;
     this.text=text;
     this.dl=dl;
+    this.width=nggmlAltGalleryImageWidth;
 };
 
 altGallery.gallery.prototype.extract=function(gallery){
@@ -71,6 +75,12 @@ altGallery.gallery.prototype.extract=function(gallery){
         var a=jQuery("dt.gallery-icon a",this).get(0);
         var img=jQuery("img",a).get(0);
         var dd=jQuery("dd.gallery-caption",this).get(0);
+        self.images.push(new self.image(img.src,a.href,dd?dd.textContent:img.alt,this));
+    });
+    jQuery("figure.gallery-item",gallery).each(function(){
+        var a=jQuery("div.gallery-icon a",this).get(0);
+        var img=jQuery("img",a).get(0);
+        var dd=jQuery("figcaption.gallery-caption",this).get(0);
         self.images.push(new self.image(img.src,a.href,dd?dd.textContent:img.alt,this));
     });
 },
@@ -87,6 +97,10 @@ altGallery.gallery.prototype.recreate=function(){
         img.className="nggml-alt-gallery";
         img.id="nggml-img-"+i;
         img.src=image.src;
+        img.width=image.width;
+        img.height=image.width;
+        img.style.width=image.width+"px";
+        img.style.height=image.width+"px";
         divIcons.appendChild(img);
         image.img=img;
         var li=document.createElement("li");
@@ -113,6 +127,11 @@ altGallery.gallery.prototype.recreate=function(){
                     id-=4;
                     jQuery(divTitles).scrollTop(id>0?jQuery(self.images[id].li).position().top
                         +jQuery(divTitles).scrollTop():0);
+                    var top=jQuery(this).parents("div.nggml-alt-gallery-container").offset().top;
+                    var divAdminBar=jQuery("div#wpadminbar");
+                    if(divAdminBar.length){top-=divAdminBar.outerHeight(true);}
+                    jQuery("body").scrollTop(top);
+                    if(jQuery("body").scrollTop()!==top){jQuery("html").scrollTop(top);}
                 },
                 function(e){
                     var color=jQuery("button#nggml-alt-gallery-unfocused").css("background-color");
@@ -138,6 +157,11 @@ altGallery.gallery.prototype.recreate=function(){
                     id-=4;
                     jQuery(divIcons).scrollTop(id>0?jQuery(self.images[id].img).position().top
                         +jQuery(divIcons).scrollTop():0);
+                    var top=jQuery(this).parents("div.nggml-alt-gallery-container").offset().top;
+                    var divAdminBar=jQuery("div#wpadminbar");
+                    if(divAdminBar.length){top-=divAdminBar.outerHeight(true);}
+                    jQuery("body").scrollTop(top);
+                    if(jQuery("body").scrollTop()!==top){jQuery("html").scrollTop(top);}
                 },
                 function(e){
                     var color=jQuery("button#nggml-alt-gallery-unfocused").css("background-color");

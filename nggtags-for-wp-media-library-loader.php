@@ -1,13 +1,13 @@
 <?php
 
 /*
- * Plugin Name:   NextGEN Gallery's nggtags for WordPress's Media Library
+ * Plugin Name:   Tags for Media Library
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
- * Description:   An implementation of NextGEN Gallery's shortcode nggtags for WordPress' Media Library.
+ * Description:   Some features for using taxonomy tags with WordPress Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       0.8.1
- * Author:        Magenta Cuda (PHP), Black Charger (JavaScript)
- * Author URI:    http://magentacuda.wordpress.com
+ * Version:       0.8.1.1
+ * Author:        Black 68 Charger, Magenta Cuda  
+ * Author URI:    http://nggtagsforwpml.wordpress.com/
  * License:       GPL2
  */
  
@@ -43,6 +43,23 @@ if ( !( $major > $tested_major || ( $major == $tested_major && $minor >= $tested
 EOD;
     } );
     return;
+}
+
+if ( isset( $wp_version ) ) {
+    list( $major, $minor ) = sscanf( $wp_version, '%D.%D' );
+    $tested_major = 4;
+    $tested_minor = 0;
+    if ( !( $major > $tested_major || ( $major == $tested_major && $minor >= $tested_minor ) ) ) {
+        add_action( 'admin_notices', function () use ( $major, $minor, $tested_major, $tested_minor ) {
+            echo <<<EOD
+<div style="padding:10px 20px;border:2px solid red;margin:50px 20px;font-weight:bold;">
+    NextGEN Gallery's nggtags for WordPress's Media Library will not work with WordPress version $major.$minor;
+    Please uninstall it or upgrade your WordPress version to $tested_major.$tested_minor or later.
+</div>
+EOD;
+        } );
+        return;
+    }
 }
 
 # ok to start loading PHP 5.4 code
