@@ -467,6 +467,7 @@ EOD
                 $new_pids = $wpdb->get_results(
                     "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'", OBJECT_K );
                 $fix_shortcode = function( $matches ) use ( $new_gids, $new_pids ) {
+                    if ( strpos( $matches[0], 'nggid' ) !== false ) { return $matches[0]; }
                     $new_ids = $matches[1] == 'nggallery' ? $new_gids : $new_pids;
                     $fix_id = function( $matches ) use ( $new_ids ) {
                         $mlid = $new_ids[$matches[3]]->post_id;
@@ -474,9 +475,13 @@ EOD
                     };
                     return preg_replace_callback( '#\sid=(("|\')?)(\d+)\1#', $fix_id, $matches[0] );
                 };
+                $fix_old_singlepic = function( $matches ) use ( $new_pids ) {
+                    $mlid = $new_pids[$matches[1]]->post_id;
+                    return "[singlepic id=\"$mlid\" nggorig=\"{$matches[1]}{$matches[2]}{$matches[3]}\"]";
+                };
                 $results = $wpdb->get_results( <<<EOT
 SELECT ID, post_content FROM $wpdb->posts
-    WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' )
+    WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' OR post_content LIKE '%[singlepic=%' )
         AND post_content NOT LIKE '% nggid=%' AND post_status = 'publish' ORDER BY ID
 EOT
                     , OBJECT_K );
@@ -485,6 +490,8 @@ EOT
                 foreach ( $results as $post_id => $result ) {
                     $post_content = preg_replace_callback( '#\[(nggallery|singlepic)\s[^\]]*\]#', $fix_shortcode,
                         $result->post_content );
+                    $post_content = preg_replace_callback( '#\[singlepic=(\d+)(,?)([^\]]*)\]#', $fix_old_singlepic,
+                        $post_content );
                     $post = array(
                         'ID' => $post_id,
                         'post_content' => $post_content

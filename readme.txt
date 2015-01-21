@@ -3,7 +3,7 @@ Contributors: Black 68 Charger,Magenta Cuda
 Tags: taxonomy tags,media library,NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 4.0
 Tested up to: 4.1
-Stable tag: 0.8.1.1
+Stable tag: 0.8.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 10. High Density Media Library View
 
 == Changelog ==
+= 0.8.1.2 =
+* show meta data for images in overlay
 = 0.8.1.1 =
 * enhanced to work better with WordPress 4.0
 = 0.8.1 =
@@ -74,6 +76,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.8.1.2 =
+* show meta data for images in overlay
 = 0.8.1.1 =
 * enhanced to work better with WordPress 4.0
 = 0.8.1 =

@@ -156,6 +156,14 @@ fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images img.nggml-ima
     
 }
 
+fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box div.nggml-img-lock:before{
+    content: "\f160";
+	display: inline-block;
+	-webkit-font-smoothing: antialiased;
+	font: normal 16px/1 'dashicons';
+	vertical-align: baseline;
+}
+
 div#nggml-overlay{
   left:10%;
   top:5%;

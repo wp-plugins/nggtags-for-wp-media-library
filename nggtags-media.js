@@ -1389,6 +1389,14 @@ jQuery(document).ready(function(){
             imgCheckbox.style.top="4px";
             imgCheckbox.style.zIndex=100;
             div.appendChild(imgCheckbox);
+            var imgLock=document.createElement("div");
+            imgLock.className="nggml-img-lock";
+            imgLock.style.display="inline-block";
+            imgLock.style.position="absolute";
+            imgLock.style.top="0";
+            imgLock.style.right="0";
+            imgLock.style.zIndex=100;
+            div.appendChild(imgLock);
             images.appendChild(div);
             jQuery(this).hide();
             posts.push(id);
@@ -1400,6 +1408,7 @@ jQuery(document).ready(function(){
         row.show();
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box").hover(
             function(){
+                if(nggmlImageIconLocked){return;}
                 jQuery(this).addClass("nggml-focused");
                 var id=this.id.substr(10);
                 var li=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
@@ -1424,6 +1433,7 @@ jQuery(document).ready(function(){
                 }
             },
             function(){
+                if(nggmlImageIconLocked){return;}
                 jQuery(this).removeClass("nggml-focused");
                 var id=this.id.substr(10);
                 jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
@@ -1432,6 +1442,7 @@ jQuery(document).ready(function(){
         );
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box").hover(
             function(){
+                if(nggmlImageIconLocked){return;}
                 jQuery(this).addClass("nggml-focused");
                 var id=this.id.substr(9);
                 var div=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
@@ -1452,12 +1463,24 @@ jQuery(document).ready(function(){
                 if(jQuery("body").scrollTop()!==top){jQuery("html").scrollTop(top);}
             },
             function(){
+                if(nggmlImageIconLocked){return;}
                 jQuery(this).removeClass("nggml-focused");
                 var id=this.id.substr(9);
                 jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
                     .removeClass("nggml-focused");
             }
         );
+        var nggmlImageIconLocked=false;
+        jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
+            div.nggml-img-lock").click(function(){
+            if(!nggmlImageIconLocked){
+                this.style.color="red";
+                nggmlImageIconLocked=true;
+            }else if(this.style.color==="red"){
+                this.style.color="black";
+                nggmlImageIconLocked=false;
+            }
+        });
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
             input[type='checkbox']").change(function(){
             var id=this.id.substr(19);
