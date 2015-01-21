@@ -136,11 +136,62 @@ div.nggml-alt-gallery-icons{
     overflow-y:auto;
 }
 
-div.nggml-alt-gallery-icons img{
+div.nggml-alt-gallery-icons div.nggml-alt-gallery{
     padding:0px;
     border-width:7px;
     border-style:solid;
     border-color:#f0f0f0;
     margin:0px;
-    float:left;
+}
+
+div.nggml-alt-gallery-meta{
+    width:16px;
+    height:16px;
+}
+
+div.nggml-alt-gallery-meta:before{
+    content: "\f348";
+	display: inline-block;
+	-webkit-font-smoothing: antialiased;
+	font: normal 16px/1 'dashicons';
+	vertical-align: baseline;
+}
+
+div.nggml-alt-gallery-meta.nggml-alt-gallery-meta-image:before{
+    vertical-align:super;
+}
+
+div#nggml-meta-overlay{
+    width:250px;
+    height:200px;
+    border:3px solid black;
+    border-radius:7px;
+    padding:5px;
+    background-color:white;
+    color:black;
+    font-size:12px;
+    overflow:auto;
+}
+
+div#nggml-meta-overlay button.nggml-meta-overlay-close-button,div#nggml-meta-overlay button.nggml-meta-overlay-fullsize-button{
+    padding:0;
+    border:1px solid black;
+    border-radius:3px;
+    margin:0;
+    background-color:white;
+    color:black;
+    line-height:90%;
+}
+
+div#nggml-meta-overlay div.nggml-meta-content{
+    padding:5px;
+    background-color:white;
+}
+
+div#nggml-meta-overlay  img.nggml-meta-overlay-img{
+    display:block;
+    width:240px;
+    padding:0;
+    border:1px solid black;
+    margin:0 auto;
 }

@@ -430,10 +430,6 @@ add_action( 'widgets_init', function() {
 
 
 if ( !is_admin() ) {
-    add_action( 'wp_enqueue_scripts', function() {
-        wp_enqueue_style( 'nggml_search', plugins_url( 'nggml_search.css', __FILE__ ) );
-        wp_enqueue_script( 'jquery' );
-    } );
     add_action( 'parse_query', function( &$query ) {
         if ( !$query->is_main_query() || !array_key_exists( 'search_media_library_for_nggtags_form', $_REQUEST ) ) { return; }
         $option = get_option( $_REQUEST['search_media_library_for_nggtags_widget_option'] );
@@ -637,8 +633,13 @@ EOD
             $gallery_options = get_option( 'search_results_for_media_library_gallery_options', '' );
             if ( !empty( $gallery_options ) ) { $gallery_options = ' ' . trim( $gallery_options );}
             echo do_shortcode( "[gallery ids=\"$posts_imploded\"{$gallery_options}]" );
+            require_once( dirname( __FILE__ ) . '/nggtags-meta-overlay-template.php' );
             get_footer();
             exit();
+        } );
+    } else {
+        add_action('wp_footer', function( ) {
+            require_once( dirname( __FILE__ ) . '/nggtags-meta-overlay-template.php' );
         } );
     }
 }

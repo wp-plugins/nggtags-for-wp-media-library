@@ -106,21 +106,41 @@ These options will automatically be added to the corresponding shortcodes in you
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
+    # settings field for user CSS file
+    add_settings_field( 'nggml_user_css_file_url', 'URL of user CSS file', function () {
+?>
+<input id="nggml_user_css_file_url" name="nggml_user_css_file_url" type="text" size="40"
+    value="<?php echo get_option( 'nggml_user_css_file_url', '' ); ?>"/>
+<?php
+        echo '&nbsp;&nbsp;use to override the plugin\'s css file';
+    }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
     # settings field for alt high density gallery view
-    add_settings_field( 'nggml_alt_high_density_gallery_image_width', 'high density gallery view image width',
+    add_settings_field( 'nggml_alt_high_density_gallery_enable', 'enable alternate gallery view',
+        function () {
+?>
+<input id="nggml_alt_high_density_gallery_enable" name="nggml_alt_high_density_gallery_enable"
+    type="checkbox" value="enabled"
+    <?php echo ( get_option( 'nggml_alt_high_density_gallery_enable', 'enabled' ) === 'enabled' ? ' checked' : '' ); ?> />
+<?php
+            echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+    add_settings_field( 'nggml_alt_high_density_gallery_image_width', 'alternate gallery view image width',
         function () {
 ?>
 <input id="nggml_alt_high_density_gallery_image_width" name="nggml_alt_high_density_gallery_image_width"
     type="number" min="16" max="1024" size="40"
     value='<?php echo get_option( 'nggml_alt_high_density_gallery_image_width', '64' ); ?>' />
 <?php
-            echo '&nbsp;&nbsp;for the user (not admin) high density gallery view';
+            echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'singlepic_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'search_results_for_media_library_gallery_options' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_user_css_file_url' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_enable' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_image_width' );
     
     add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
@@ -348,7 +368,8 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         // reorder $ids using priorities saved in taxonomy priority
         $ids = sort_ids_by_priority( $ids );
         // use WordPress's built in gallery to do NextGEN Gallery's nggtags shortcode
-        return do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
+        return '<!-- nggtags start -->' . do_shortcode( '[gallery ids="' . implode( ',', $ids )
+            . "\"{$gallery_options}{$args}]" ) . '<!-- nggtags end -->';
     }
     if ( !empty( $album ) ) {
         // this is an album
@@ -462,7 +483,7 @@ add_shortcode( 'nggallery', function ( $atts, $content, $tag ) {
         $args .= " $att=\"$att_value\"";
     }
     // use WordPress's built in gallery to do NextGEN Gallery's nggallery shortcode
-    return do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+    return '<!-- nggallery start -->' . do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" ) . '<!-- nggallery end -->';
 } );
 
 /*
@@ -486,7 +507,7 @@ add_shortcode( 'singlepic', function ( $atts, $content, $tag ) {
         $args .= " $att=\"$att_value\"";
     }
     // use WordPress's built in gallery shortcode to do NextGEN Gallery's singlepic shortcode
-    return do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+    return '<!-- singlepic start -->' . do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" ) . '<!-- singlepic end -->';
 } );
 
 function is_nggtags_media_library_request() {
@@ -584,15 +605,59 @@ add_action( 'wp_ajax_nggml_get_media_table_rows', function( ) {
     die;
 } );
 
-include_once( dirname( __FILE__ ) . '/nggtags-search-widget.php' );
+require_once( dirname( __FILE__ ) . '/nggtags-search-widget.php' );
+
+if ( is_admin() === true ) {
+    $nggml_get_attachment_meta = function( ) {
+        global $wpdb;
+        $ids = explode( ',', $_POST['ids'] );
+        $ids = implode( ',', array_map( function( $i ) { return intval( $i ); }, $ids ) );
+        $results = $wpdb->get_results( <<<EOD
+SELECT p.ID,p.post_title,p.post_content,p.post_excerpt,p.post_author,p.post_mime_type,p.guid,p.post_type,m.meta_key,m.meta_value
+    FROM $wpdb->posts p,$wpdb->postmeta m WHERE p.ID=m.post_id AND post_type='attachment' AND p.ID IN ( $ids ) ORDER BY p.ID
+EOD
+            , OBJECT );
+        $images = [];
+        foreach( $results as $result ) {
+            if ( !$images || $result->ID !== $image->ID ) {
+                $images[$result->ID] = new \stdClass();
+                $image =& $images[$result->ID];
+                $image->ID = $result->ID;
+                $image->post_title = $result->post_title;
+                $image->post_content = $result->post_content;
+                $image->post_excerpt = $result->post_excerpt;
+                $image->post_author = get_the_author_meta( 'display_name', $result->post_author );
+                $image->post_mime_type = $result->post_mime_type;
+                $image->guid = wp_get_attachment_url( $result->ID );
+            }
+            if ( $result->meta_key === '_wp_attachment_metadata' && is_serialized( $result->meta_value ) ) {
+                $image->{$result->meta_key} = unserialize( $result->meta_value );
+            } else {
+                $image->{$result->meta_key} = $result->meta_value;
+            }
+        }
+        echo json_encode( $images );
+        wp_die();
+    };
+    add_action( 'wp_ajax_nggml_get_attachment_meta',        $nggml_get_attachment_meta );
+    add_action( 'wp_ajax_nopriv_nggml_get_attachment_meta', $nggml_get_attachment_meta );
+}
 
 if ( !is_admin() ) {
     add_action( 'wp_enqueue_scripts', function() {
         global $wp_scripts;
+        wp_enqueue_style( 'dashicons' );
         wp_enqueue_style( 'nggml_search', plugins_url( 'nggml_search.css', __FILE__ ) );
+        $user_css_url = get_option( 'nggml_user_css_file_url', '' );
+        if ( $user_css_url ) {
+            wp_enqueue_style( 'nggml_user', $user_css_url, [ 'nggml_search' ] );
+        }
         wp_enqueue_script( 'nggml-search', plugins_url( 'nggml-search.js', __FILE__ ), array( 'jquery' ) );
         $wp_scripts->add_data( 'nggml-search', 'data', 'var nggmlAltGalleryImageWidth='
-            . get_option( 'nggml_alt_high_density_gallery_image_width', '64' ) . ';' );
+            . get_option( 'nggml_alt_high_density_gallery_image_width', '64' ) . ';'
+            . 'var nggmlAltGalleryEnabled='
+            . ( get_option( 'nggml_alt_high_density_gallery_enable', 'enabled' ) === 'enabled' ? 'true;' : 'false;' )
+            . 'var ajaxurl="' . admin_url( 'admin-ajax.php' ) . '";' );
     } );
 }
 
