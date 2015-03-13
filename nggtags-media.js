@@ -240,7 +240,7 @@ window.wp = window.wp || {};
 
 			file.attachment.set( _.extend( response.data, { uploading: false }) );
 			wp.media.model.Attachment.get( response.data.id, file.attachment );
-      wp.media.nggml.collection.add(file.attachment);
+            wp.media.nggml.collection.add(file.attachment);
 
 			complete = Uploader.queue.all( function( attachment ) {
 				return ! attachment.get('uploading');
@@ -273,9 +273,18 @@ window.wp = window.wp || {};
                             e.stopPropagation();
                             e.preventDefault();
                             e.returnValue=false;
-                            media.nggml.showEditAttachmentOverlay(id);
+                            wp.media.nggml.showEditAttachmentOverlay(id);
                             return false;
                         });
+                        $v.find("td.title div.row-actions span.delete a").click(function(e){
+                            var id=jQuery(this).parents("tr")[0].id.substr(5);
+                            e.stopImmediatePropagation();
+                            e.stopPropagation();
+                            e.preventDefault();
+                            e.returnValue=false;
+                            if(wp.media.nggml.deleteAttachment(id)){wp.media.nggml.nggmlImageIconLocked=false;}
+                            return false;
+                        }).each(function(){this.onclick=null;});
                         var thead=jQuery("table.wp-list-table thead tr");
                         $v.find('td').each(function(){
                             var td=this;
@@ -286,14 +295,15 @@ window.wp = window.wp || {};
                             });
                         });
                     });
+                    jQuery("div.tablenav span.displaying-num")
+                        .text(jQuery("table.wp-list-table tbody#the-list tr[id^='post-']").length
+                            +wp.media.nggml.otherPagesCount+" items");
                     if(wp.media.nggml.nggmlScreenOptions.use_alt_media_list_pane){
                         wp.media.nggml.hideAltMediaListPane();
                         wp.media.nggml.showAltMediaListPane();
                     }
                     Uploader.queue.reset();
                 });
-                jQuery("div.tablenav span.displaying-num")
-                    .text(jQuery("table.wp-list-table tbody#the-list tr[id^='post-']").length+" items");
             }
 
 			self.success( file.attachment );
@@ -429,7 +439,7 @@ window.wp = window.wp || {};
 
 jQuery(document).ready(function(){
 	var l10n;
-  var media = wp.media;
+    var media = wp.media;
 	l10n = media.view.l10n = typeof _wpMediaViewsL10n === 'undefined' ? {} : _wpMediaViewsL10n;
   
 	/**
@@ -1171,7 +1181,7 @@ jQuery(document).ready(function(){
         }	
     });
     var clicked;
-    jQuery("select.nggml-filter option").click(function(e){
+    jQuery("select.nggml-filter option").mousedown(function(e){
         clicked=this;
     });
     jQuery("select.nggml-filter").change(function(e){
@@ -1179,6 +1189,7 @@ jQuery(document).ready(function(){
         if(clicked.selected){
             if(clicked.value!=="0-nggml-all"){
                 jQuery("option[value='0-nggml-all']",this).prop("selected",false);
+                jQuery("input[type='checkbox'][name='"+this.name+"'][value='0-nggml-all']").prop("checked",false);
             }else{
                 jQuery("option[value!='0-nggml-all']",this).prop("selected",false);
             }
@@ -1290,8 +1301,15 @@ jQuery(document).ready(function(){
         return true;
     }
     media.nggml.showEditAttachmentOverlay=showEditAttachmentOverlay;
-    jQuery("table.wp-list-table tbody#the-list tr td.title div.row-actions span.edit a").each(function(){
-      jQuery(this).click(function(e){
+    media.nggml.deleteAttachment=function(id){
+        if(media.nggml.collection){
+            var model=media.nggml.collection.get(id);
+            if(model){if(confirm(l10n.warnDelete)){model.destroy();return true;}}
+        }
+        return false;
+    }
+    var rowActions=jQuery("table.wp-list-table tbody#the-list tr td.title div.row-actions");
+    rowActions.find("span.edit a").click(function(e){
         var id=jQuery(this).parents("tr")[0].id.substr(5);
         e.stopImmediatePropagation();
         e.stopPropagation();
@@ -1299,8 +1317,16 @@ jQuery(document).ready(function(){
         e.returnValue=false;
         showEditAttachmentOverlay(id);
         return false;
-      });
     });
+    rowActions.find("span.delete a").click(function(e){
+        var id=jQuery(this).parents("tr")[0].id.substr(5);
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+        e.returnValue=false;
+        if(media.nggml.deleteAttachment(id)){media.nggml.nggmlImageIconLocked=false;}
+        return false;
+    }).each(function(){this.onclick=null;});
     function createUpdatingOverlayForTableMediaRow(tr,display){
       var updatingOverlayDiv=document.createElement("div");
       updatingOverlayDiv.id="updating-overlay-for-table-media-row";
@@ -1324,6 +1350,7 @@ jQuery(document).ready(function(){
     }
     media.nggml.createUpdatingOverlayForTableMediaRow=createUpdatingOverlayForTableMediaRow;
     function showAltMediaListPane(){
+        // TODO: should we show div.row-actions - uses visibility hidden to hide
         jQuery("table.wp-list-table tr td.title div.row-actions").css("display","none");
         var maxRowOuterHeight=0;
         jQuery("table.wp-list-table.widefat tbody#the-list tr[id|='post']").each(function(){
@@ -1408,7 +1435,7 @@ jQuery(document).ready(function(){
         row.show();
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box").hover(
             function(){
-                if(nggmlImageIconLocked){return;}
+                if(media.nggml.nggmlImageIconLocked){return;}
                 jQuery(this).addClass("nggml-focused");
                 var id=this.id.substr(10);
                 var li=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
@@ -1433,7 +1460,7 @@ jQuery(document).ready(function(){
                 }
             },
             function(){
-                if(nggmlImageIconLocked){return;}
+                if(media.nggml.nggmlImageIconLocked){return;}
                 jQuery(this).removeClass("nggml-focused");
                 var id=this.id.substr(10);
                 jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li#nggml-li-"+id)
@@ -1442,7 +1469,7 @@ jQuery(document).ready(function(){
         );
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-titles li.nggml-image-title-box").hover(
             function(){
-                if(nggmlImageIconLocked){return;}
+                if(media.nggml.nggmlImageIconLocked){return;}
                 jQuery(this).addClass("nggml-focused");
                 var id=this.id.substr(9);
                 var div=jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
@@ -1463,22 +1490,32 @@ jQuery(document).ready(function(){
                 if(jQuery("body").scrollTop()!==top){jQuery("html").scrollTop(top);}
             },
             function(){
-                if(nggmlImageIconLocked){return;}
+                if(media.nggml.nggmlImageIconLocked){return;}
                 jQuery(this).removeClass("nggml-focused");
                 var id=this.id.substr(9);
                 jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div#nggml-div-"+id)
                     .removeClass("nggml-focused");
             }
         );
-        var nggmlImageIconLocked=false;
+        media.nggml.nggmlImageIconLocked=false;
+        var rowHeight=null;
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
             div.nggml-img-lock").click(function(){
-            if(!nggmlImageIconLocked){
+            if(!media.nggml.nggmlImageIconLocked){
                 this.style.color="red";
-                nggmlImageIconLocked=true;
+                media.nggml.nggmlImageIconLocked=true;
+                var id=jQuery("div.nggml-image-icon-box.nggml-focused")[0].id.substr(10);
+                var tr=jQuery("table.wp-list-table tbody#the-list tr[id='post-"+id+"']");
+                rowHeight=tr.height();
+                tr.find("td.title div.row-actions").css("visibility","visible").show();
+                tr.css("height","auto");
             }else if(this.style.color==="red"){
                 this.style.color="black";
-                nggmlImageIconLocked=false;
+                media.nggml.nggmlImageIconLocked=false;
+                var id=jQuery("div.nggml-image-icon-box.nggml-focused")[0].id.substr(10);
+                var tr=jQuery("table.wp-list-table tbody#the-list tr[id='post-"+id+"']");
+                tr.find("td.title div.row-actions").css("visibility","hidden").hide();
+                tr.height(rowHeight);
             }
         });
         jQuery("fieldset#nggml-alt-media-list-pane div#nggml-alt-media-list-images div.nggml-image-icon-box \
@@ -1627,6 +1664,8 @@ jQuery(document).ready(function(){
         var select_filter=null;
         if(column.indexOf("taxonomy-")===0){
             select_filter="select.filter-"+column.substr(9);
+        }else if(column==="parent"){
+            select_filter="select.filter-attached-to";
         }else if(column==="date"){
             select_filter="select[name='m']";
         }
@@ -1645,6 +1684,8 @@ jQuery(document).ready(function(){
     if(!jQuery(".hide-column-tog[value='date']").prop("checked")){
         jQuery("select[name='m']").hide();
     }
+    wp.media.nggml.otherPagesCount=parseInt(jQuery("div.tablenav span.displaying-num")[0].textContent)
+        -jQuery("table.wp-list-table tbody#the-list tr[id^='post-']").length;
 });
 
 // extracted from wp-admin\js\post.js

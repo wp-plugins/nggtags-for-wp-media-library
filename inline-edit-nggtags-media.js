@@ -37,6 +37,7 @@ inlineEditPost = {
 		});
 
 		$('a.cancel', bulkRow).click(function(){
+            var media=$("[name='media']");
 			return inlineEditPost.revert();
 		});
 
@@ -72,7 +73,7 @@ inlineEditPost = {
                     return;
                 }
             }
-			if ( 'add-tags' === a || 'edit-priority' === a ) {
+			if ( 'add-tags' === a || 'edit-priority' === a || 'attach-to' === a ) {
 				e.preventDefault();
 				t.setBulk(a);
                 if ( 'add-tags' === a ) {
@@ -106,8 +107,14 @@ inlineEditPost = {
 		$('#bulk-edit').addClass('inline-editor').show();
         if ( 'add-tags' === a ) {
             $('#bulk-edit .bulk-edit-taxonomy').show();
+            jQuery("input.button#bulk_edit[type='submit'][name='bulk_edit']").prop("disabled",false);
         } else if ( 'edit-priority' === a ) {
             $('#bulk-edit .bulk-edit-priority').show();
+            jQuery("input.button#bulk_edit[type='submit'][name='bulk_edit']").prop("disabled",false);
+        } else if ( 'attach-to' === a ) {
+            $('#bulk-edit .bulk-attach-to').show();
+            nggmlFindPosts.open();
+            jQuery("input.button#bulk_edit[type='submit'][name='bulk_edit']").prop("disabled",true);
         }
 		$( 'tbody th.check-column input[type="checkbox"]' ).each( function() {
 			if ( $(this).prop('checked') ) {
@@ -124,10 +131,8 @@ inlineEditPost = {
 			return this.revert();
 		}
 
-		$('#bulk-titles').html(te);
-		$('#bulk-titles a').click(function(){
+		$(a!=="attach-to"?"#bulk-titles":"#attach-to-bulk-titles").html(te).find("a").click(function(){
 			var id = $(this).attr('id').substr(1);
-
 			$('table.widefat input[value="' + id + '"]').prop('checked', false);
 			$('#ttle'+id).remove();
 		});
@@ -318,11 +323,14 @@ inlineEditPost = {
 			$('table.widefat .spinner').hide();
 
 			if ( 'bulk-edit' === id ) {
-				$('table.widefat #bulk-edit').removeClass('inline-editor').hide();
+                $('table.widefat #bulk-edit').removeClass('inline-editor').hide();
                 $('#bulk-edit .bulk-edit-taxonomy').hide();
                 $('#bulk-edit .bulk-edit-priority').hide();
-				$('#bulk-titles').html('');
-				$('#inlineedit').append( $('#bulk-edit') );
+                $('#bulk-edit .bulk-attach-to').hide();
+                $('#bulk-titles').html('');
+                $('#attach-to-bulk-titles').html('');
+                $('#nggml-find-posts-response').html('');
+                $('#inlineedit').append( $('#bulk-edit') );
 			} else {
 				$('#'+id).remove();
 				id = id.substr( id.lastIndexOf('-') + 1 );

@@ -108,6 +108,7 @@ EOD;
             if ( substr_compare( $key, 'tax-tag-', 0, 8 ) === 0 ) {
                 # display the taxonomy results
                 $tax_name = substr( $key, 8 );
+                if ( !array_key_exists( $tax_name, $taxonomies ) ) { continue; }
                 $values =& $terms[$tax_name];
                 $taxonomy = $taxonomies[$tax_name];
 ?>
@@ -118,13 +119,15 @@ EOD;
 <div class="nggml-search-fields-values" style="display:none;">
 <?php
                 $count = -1;
-                foreach ( $values['values'] as $term_id => &$result ) {
-                    if ( ++$count === $SQL_LIMIT ) { break; }
+                if ( isset( $values['values'] ) ) {
+                    foreach ( $values['values'] as $term_id => &$result ) {
+                        if ( ++$count === $SQL_LIMIT ) { break; }
 ?>
 <input type="checkbox" id="<?php echo $tax_type . $taxonomy->name ?>" name="<?php echo $tax_type . $taxonomy->name ?>[]"
     value="<?php echo $term_id; ?>"><?php echo "$result[name]($result[count])"; ?><br>
 <?php
-                }   # foreach ( $values['values'] as $term_id => $result ) {
+                    }   # foreach ( $values['values'] as $term_id => $result ) {
+                }
                 unset( $result );
                 if ( $count === $SQL_LIMIT ) {
 ?>
@@ -629,11 +632,13 @@ EOD
             # finally output all the HTML - header, content and footer
             get_header();
             # emit the appropriate gallery shortcode for content
+            echo '<div style="position:relative;background-color:lightgray;z-index:10000;">';
             echo '<h1 style="text-align:center;margin-bottom:50px;">Media Library Search Results</h1>';
             $gallery_options = get_option( 'search_results_for_media_library_gallery_options', '' );
             if ( !empty( $gallery_options ) ) { $gallery_options = ' ' . trim( $gallery_options );}
             echo do_shortcode( "[gallery ids=\"$posts_imploded\"{$gallery_options}]" );
             require_once( dirname( __FILE__ ) . '/nggtags-meta-overlay-template.php' );
+            echo '</div>';
             get_footer();
             exit();
         } );

@@ -3,6 +3,7 @@
 /* global ajaxurl, attachMediaBoxL10n */
 
 var findPosts;
+var nggmlFindPosts;
 ( function( $ ){
 
   var media = wp.media;
@@ -76,6 +77,49 @@ var findPosts;
 		}
 	};
 
+	nggmlFindPosts = {
+		open: function( ) {
+			$('#nggml-find-posts-input').focus().keyup( function( event ){
+				if ( event.which == 27 ) {
+					nggmlFindPosts.close();
+				} // close on Escape
+			});
+			// Pull some results up by default
+			nggmlFindPosts.send();
+			return false;
+		},
+
+		close: function() {
+			$('#nggml-find-posts-response').html('');
+		},
+
+		send: function() {
+			var post = {
+					ps: $( '#nggml-find-posts-input' ).val(),
+					action: 'find_posts',
+					_ajax_nonce: $('#_nggml_ajax_nonce').val()
+				},
+				spinner = $( '.nggml-find-box-search .spinner' );
+
+			spinner.show();
+
+			$.ajax( ajaxurl, {
+				type: 'POST',
+				data: post,
+				dataType: 'json'
+			}).always( function() {
+				spinner.hide();
+			}).done( function( x ) {
+				if ( ! x.success ) {
+					$( '#nggml-find-posts-response' ).text( attachMediaBoxL10n.error );
+				}
+				$( '#nggml-find-posts-response' ).html( x.data );
+			}).fail( function() {
+				$( '#nggml-find-posts-response' ).text( attachMediaBoxL10n.error );
+			});
+		}
+	};
+
 	$( document ).ready( function() {
     var uploader=null;
     jQuery("a.add-new-h2").click(function(e){
@@ -108,6 +152,7 @@ var findPosts;
     jQuery("table.wp-list-table tbody#the-list tr[id|='post']").each(function(){
         ids.push(parseInt(this.id.substr(5)));
     });
+    media.model.Query.defaultArgs.posts_per_page=jQuery("input.screen-per-page#upload_per_page").val();
     media.nggml={};
     media.nggml.collection=media.query({
       post__in:ids,
@@ -128,6 +173,8 @@ var findPosts;
         jQuery("div#nggml-alt-media-list-images div#nggml-div-"+attachment.attributes.id).remove();
         jQuery("div#nggml-alt-media-list-titles li#nggml-li-"+attachment.attributes.id).remove();
         jQuery("table.wp-list-table tr#post-"+attachment.attributes.id).remove();
+        jQuery("div.tablenav span.displaying-num")
+            .text(jQuery("table.wp-list-table tbody#the-list tr[id^='post-']").length+media.nggml.otherPagesCount+" items");        
     });
     media.nggml.collection.more().done(function(){
     });
@@ -143,6 +190,24 @@ var findPosts;
 		});
 		$( '#find-posts-search' ).click( findPosts.send );
 		$( '#find-posts-close' ).click( findPosts.close );
+		$( '#nggml-find-posts-submit' ).click( function( event ) {
+			if ( ! $( '#find-posts-response input[type="radio"]:checked' ).length ) {
+                var media=$(".check-column [name='media[]']:checked");
+                media=media.map(function(){return this.value;}).get();
+                var query={
+                    _wpnonce:$("[name='_wpnonce']").val(),
+                    _wp_http_referer:$("[name='_wp_http_referer']").val(),
+                    action:$("[name='action']").val(),
+                    media:media,
+                    action2:$("[name='action2']").val(),
+                    found_post_id:$("[name='found_post_id']:checked").val(),
+                    "find-posts-submit":$("[name='nggml-find-posts-submit']").val()
+                };
+                location.assign(location.origin+location.pathname+"?"+$.param(query));
+            }
+			event.preventDefault();
+		});
+		$( '#nggml-find-posts-search' ).click( nggmlFindPosts.send );
 		$( '#doaction, #doaction2' ).click( function( event ) {
 			$( 'select[name^="action"]' ).each( function() {
 				if ( $(this).val() === 'attach' ) {

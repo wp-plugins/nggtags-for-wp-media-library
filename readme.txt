@@ -3,7 +3,7 @@ Contributors: Black 68 Charger,Magenta Cuda
 Tags: taxonomy tags,media library,NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 4.0
 Tested up to: 4.1
-Stable tag: 0.8.1.2
+Stable tag: 0.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Features for using taxonomy tags with Media Library. Also converts NextGEN Galle
 == Description ==
 TLM - Tags for Media Library - was originally developed for porting NextGEN Gallery 1.9 to WordPress Media Library but has evolved into something that may be useful to anyone trying to use taxonomy tags on WordPress Media Library items. TLM supports [dynamically generating galleries](http://nggtagsforwpml.wordpress.com/#nggtags) using a criteria based on taxonomy tags, [multiple tag taxonomies](http://nggtagsforwpml.wordpress.com/#additional-taxonomies) for media items, [bulk assignment/removal](http://nggtagsforwpml.wordpress.com/#bulk-tag-edit) of taxonomy tags to/from media items, filtering the Media Library [by taxonomy tags](http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags), sorting the media items based on a [priority tag](http://nggtagsforwpml.wordpress.com/#bulk-priority-edit), a [search widget](http://nggtagsforwpml.wordpress.com/a-widget-for-searching-the-media-library-by-taxonomy) for media items using a criteria based on taxonomy tags and an [alternate high density view](http://nggtagsforwpml.wordpress.com/#hi-density-media-library) of the Media Library. The website for this plugin is [here](http://nggtagsforwpml.wordpress.com/).  **This version requires WordPress 4.0 and PHP 5.4.**
 
-For NextGEN Gallery 1.9 users: This plugin first converts NextGEN Gallery's image database to a WordPress Media Library image database. After the conversion NextGEN Gallery images and galleries have become WordPress Media Library images and galleries. NextGEN albums are ignored. A WordPress taxonomy 'ngg_tag' is created and the NextGEN Gallery image tags are saved in this taxonomy. This plugin also directly implements the 'nggtags' shortcode so post content with the 'nggtags' shortcode will still work without editing the post content. NextGEN Gallery's sortorder is implemented using a tag taxonomy to hold priorities. **This plugin works with NextGEN Gallery 1.9.13.**
+For NextGEN Gallery 1.9 users: This plugin first converts NextGEN Gallery's image database to a WordPress Media Library image database. After the conversion NextGEN Gallery images and galleries have become WordPress Media Library images and galleries. A WordPress taxonomy 'ngg_tag' is created and the NextGEN Gallery image tags are saved in this taxonomy. This plugin implements the NextGEN Gallery shortcodes [nggtags], [nggallery], [album] and [singlepic] using the WordPress [gallery] shortcode so post content with these shortcodes will still work without editing the post content. NextGEN Gallery's sortorder is implemented using a tag taxonomy to hold priorities. **This plugin works with NextGEN Gallery 1.9.13.**
 
 == Installation ==
 1. Upload 'nggtags-for-wp-media-library to the '/wp-content/plugins' directory.
@@ -38,6 +38,17 @@ No conversion is necessary and the plugin can still be used as implementation of
 10. High Density Media Library View
 
 == Changelog ==
+= 0.10 =
+* fix captions for [nggtags album] shortcode
+* fix alternate gallery view to work with themes using non default css box-sizing
+* fix various other bugs
+* conversion from NextGEN Gallery now also does albums
+* conversion from NextGEN Gallery now also does the exclude flag
+* use NextGEN Gallery shortcode parameters as HTML class attributes to the converted WordPress gallery
+* bulk operations now support attach to post
+* admin media view now supports filtering by gallery (i.e. uploaded to)
+* another alternate gallery view
+* edit/view/delete links now accessible in row view
 = 0.8.1.2 =
 * show meta data for images in overlay
 = 0.8.1.1 =
@@ -76,6 +87,17 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 0.10 =
+* fix captions for [nggtags album] shortcode
+* fix alternate gallery view to work with themes using non default css box-sizing
+* fix various other bugs
+* conversion from NextGEN Gallery now also does albums
+* conversion from NextGEN Gallery now also does the exclude flag
+* use NextGEN Gallery shortcode parameters as HTML class attributes to the converted WordPress gallery
+* bulk operations now support attach to post
+* admin media view now supports filtering by gallery (i.e. uploaded to)
+* another alternate gallery view
+* edit/view/delete links now accessible in row view
 = 0.8.1.2 =
 * show meta data for images in overlay
 = 0.8.1.1 =

@@ -86,6 +86,65 @@ div.nggml-bulk-priority-edit-item{
     position:relative;
 }
 
+/* following copied from #bulk-titles of .../wp-admin/css/common.css */
+
+#attach-to-bulk-titles div a:before {
+	background: none;
+	color: #bbb;
+	content: '\f153';
+	display: block !important;
+	font: normal 16px/1 'dashicons';
+	speak: none;
+	height: 20px;
+	text-align: center;
+	width: 20px;
+	-webkit-font-smoothing: antialiased !important;
+}
+
+#attach-to-bulk-titles div a:before {
+	margin: 2px 0;
+}
+
+#attach-to-bulk-titles div a:hover:before {
+	color: #c00;
+}
+
+/* to  do hover */
+
+/* end of copied css */
+
+/* following copied from #bulk-titles of .../wp-admin/css/list-tables.css */
+
+.inline-edit-row #attach-to-bulk-titles div {
+	font-style: normal;
+	font-size: 11px;
+}
+
+#attach-to-bulk-titles {
+	line-height: 140%;
+}
+#attach-to-bulk-titles div {
+	margin: 0.2em 0.3em;
+}
+
+#attach-to-bulk-titles div a {
+	cursor: pointer;
+	display: block;
+	float: left;
+	height: 18px;
+	margin: 0 3px 0 -2px;
+	overflow: hidden;
+	position: relative;
+	width: 20px;
+}
+
+#attach-to-bulk-titles div a:before {
+	position: relative;
+	top: -3px;
+}
+
+/* end of copied css */
+
 div.nggml-filter-checkbox-overlay{
     padding:10px;
     border:1px solid black;

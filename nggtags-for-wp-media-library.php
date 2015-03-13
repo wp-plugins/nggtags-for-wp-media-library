@@ -29,6 +29,7 @@ $max_taxonomies = 8;
 
 $ntfwml_ngg_pictures  = $wpdb->prefix . 'ngg_pictures';
 $ntfwml_ngg_galleries = $wpdb->prefix . 'ngg_gallery';
+$ntfwml_ngg_album     = $wpdb->prefix . 'ngg_album';
 
 // Are there any NextGEN Gallery pictures?
 
@@ -92,7 +93,7 @@ These options will automatically be added to the corresponding shortcodes in you
 ?>
 <input id="singlepic_for_media_library_gallery_options" name="singlepic_for_media_library_gallery_options" type="text"
     size="40" value='<?php echo get_option( 'singlepic_for_media_library_gallery_options' ); ?>'
-    placeholder='e.g. size="full"'/>
+    placeholder='e.g. size="full" columns="1"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
@@ -134,6 +135,15 @@ These options will automatically be added to the corresponding shortcodes in you
 <?php
             echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+    add_settings_field( 'nggml_alt_high_density_gallery_focus_color', 'alternate gallery view highlight color',
+        function () {
+?>
+<input id="nggml_alt_high_density_gallery_focus_color" name="nggml_alt_high_density_gallery_focus_color"
+    type="text" size="40"
+    value='<?php echo get_option( 'nggml_alt_high_density_gallery_focus_color', 'yellow' ); ?>' />
+<?php
+            echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
@@ -142,6 +152,7 @@ These options will automatically be added to the corresponding shortcodes in you
     register_setting( 'nggtags_for_media_library_settings', 'nggml_user_css_file_url' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_enable' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_image_width' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_focus_color' );
     
     add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
         function () {
@@ -174,6 +185,9 @@ your own tag taxonomies</a> for Media Library images.
         } else if ( $i === 2 ) {
             $taxonomy_slug_value = 'priority';
             if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Priority'; }
+        } else if ( $i === 3 ) {
+            $taxonomy_slug_value = 'exclude';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Exclude'; }
         } else {  
             $taxonomy_slug_value = get_option( $taxonomy_slug );
         }
@@ -185,23 +199,43 @@ your own tag taxonomies</a> for Media Library images.
             $taxonomy_name_value = '';
         }
         add_settings_field( $taxonomy_name, "Taxonomy Name $use_i",
-            function () use ( $taxonomy_name, $taxonomy_name_value ) {
+            function () use ( $taxonomy_name, $taxonomy_name_value, $use_i ) {
 ?>
 <input id="<?php echo $taxonomy_name; ?>" name="<?php echo $taxonomy_name; ?>" type="text"
+    class="nggtags_for_media_library_taxonomy_name"
     size="40" value="<?php echo $taxonomy_name_value; ?>" placeholder="enter new taxonomy name" />
 <?php
-            }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
+            if ( $use_i === 2 ) {
+                echo '&nbsp;&nbsp;this number sets the order in a TLM gallery - smaller is earlier';
+            } else if ( $use_i === 3 ) {
+                echo '&nbsp;&nbsp;a yes value will exclude this image from a TLM gallery';
+            }
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
         add_settings_field( $taxonomy_slug, "Taxonomy Slug $use_i",
-            function () use ( $taxonomy_slug, $taxonomy_slug_value, $use_i ) {
+            function () use ( $taxonomy_slug, $taxonomy_slug_value, $use_i, $i, $taxonomy_count ) {
 ?>
 <input id="<?php echo $taxonomy_slug; ?>" name="<?php echo $taxonomy_slug; ?>" type="text"
     size="40" value="<?php echo $taxonomy_slug_value; ?>" placeholder="enter new taxonomy slug"
-    <?php if ( $use_i <= 2 ) { echo 'disabled'; } ?> />
-    <?php if ( !empty( $taxonomy_slug_value ) && $use_i > 2 ) {
-        echo '&nbsp;&nbsp;an empty slug value will delete this taxonomy';
-    } ?>
+    <?php if ( $use_i <= 3 ) { echo 'disabled'; } ?> />
 <?php
-            }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
+            if ( !empty( $taxonomy_slug_value ) && $use_i > 3 ) {
+                echo '&nbsp;&nbsp;an empty slug value will delete this taxonomy';
+            }
+            if ( $i === $taxonomy_count ) {
+?>
+<script type="text/javascript">
+(function(){
+    var list=document.querySelectorAll("input.nggtags_for_media_library_taxonomy_name");
+    for(var i=0;i<list.length;i++){
+        list.item(i).addEventListener("change",function(){
+            document.getElementById(this.id.replace("name","slug")).value=this.value.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+        });
+    }
+})();
+</script>
+<?php
+            }
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
         register_setting( 'nggtags_for_media_library_settings', $taxonomy_slug );
         register_setting( 'nggtags_for_media_library_settings', $taxonomy_name );
     }
@@ -270,6 +304,19 @@ add_filter( 'plugin_action_links', function ( $actions, $plugin_file, $plugin_da
 add_action( 'init', function () {
     global $max_taxonomies;
     $taxonomy_count = $max_taxonomies; 
+    # check for pre 0.8.2 taxonomy database format and upgrade to 0.8.2 format if necessary
+    if ( get_option( 'nggtags_for_media_library_taxonomy_slug_3', '' ) ) {
+        for ( $i = $taxonomy_count; $i >= 3; $i-- ) {
+            if ( $taxonomy_slug_value = get_option( "nggtags_for_media_library_taxonomy_slug_$i", '' ) ) {
+                $j = $i + 1;
+                update_option( "nggtags_for_media_library_taxonomy_slug_$j", $taxonomy_slug_value );
+                update_option( "nggtags_for_media_library_taxonomy_name_$j",
+                    get_option( "nggtags_for_media_library_taxonomy_name_$i", '' ) );
+            }
+        }
+        update_option( 'nggtags_for_media_library_taxonomy_slug_3', '' );
+        update_option( 'nggtags_for_media_library_taxonomy_name_3', '' );
+    }
     for ( $i = 1; $i <= $taxonomy_count; $i++ ) {
         $taxonomy_slug = "nggtags_for_media_library_taxonomy_slug_$i";
         $taxonomy_name = "nggtags_for_media_library_taxonomy_name_$i";
@@ -282,6 +329,10 @@ add_action( 'init', function () {
             // priority taxonomy will be used to replace NextGEN Gallery's sortorder
             $taxonomy_slug_value = 'priority';
             if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Priority'; }
+        } else if ( $i === 3 ) {
+            // exclude taxonomy holds the NextGEN Gallery exclude flag
+            $taxonomy_slug_value = 'exclude';
+            if ( empty( $taxonomy_name_value ) ) { $taxonomy_name_value = 'Exclude'; }
         } else {  
             $taxonomy_slug_value = get_option( $taxonomy_slug );
         }
@@ -351,8 +402,10 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
     // pass all parameters except 'gallery' and 'album' to the WordPress builtin 'gallery' shortcode
     unset( $atts['gallery'], $atts['album'] );
     $args = '';
+    $classes = [];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
+        $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
     }
     $gallery_options = get_option( 'nggtags_for_media_library_gallery_options', '' );
     if ( !empty( $gallery_options ) ) {
@@ -364,12 +417,16 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         // the duplicate below is not a mistake - two passes are sometimes necessary
         $gallery = preg_replace( '#(^|;)(([a-z_-]+,)*[a-z_-]+)(;|$)#', '$1ngg_tag:$2$4', $gallery );
         $gallery = preg_replace( '#(^|;)(([a-z_-]+,)*[a-z_-]+)(;|$)#', '$1ngg_tag:$2$4', $gallery );
-        $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:' . $gallery );
+        $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:' . $gallery . ';exclude:-yes' );
         // reorder $ids using priorities saved in taxonomy priority
         $ids = sort_ids_by_priority( $ids );
         // use WordPress's built in gallery to do NextGEN Gallery's nggtags shortcode
-        return '<!-- nggtags start -->' . do_shortcode( '[gallery ids="' . implode( ',', $ids )
-            . "\"{$gallery_options}{$args}]" ) . '<!-- nggtags end -->';
+        $gallery = do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
+        if ( $classes ) {
+            $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes ) . '\'',
+                $gallery );
+        }   
+        return $gallery;
     }
     if ( !empty( $album ) ) {
         // this is an album
@@ -379,7 +436,7 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         $gallery_image_ids = array();
         $gallery_image_tags = array();
         foreach( $tags as $tag ) {
-            $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:ngg_tag:' . $tag );
+            $ids = Nggtags_for_Media_Library::get_posts_with_spec( 'attachment:ngg_tag:' . $tag . ';exclude:-yes' );
             if ( empty( $ids ) ) {
                 continue;
             }
@@ -412,23 +469,41 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         $album = do_shortcode( '[gallery ids="' . implode( ',', $gallery_image_ids ) . "\"{$album_gallery_options}{$album_args}]" );
         // replace the <a> element with a <span> element since we do not want that link
         $album = preg_replace( array( '#<a\s.+?attachment_id=(\d+).+?>#', '#</a>#' ),
-            array( '<span id="album-gallery-$1" class="album-gallery-icon">', '</span>' ), $album );
+            array( '<span id="album-gallery-$1" class="album-gallery-icon">', '</span>' ), $album ); 
         // replace the image captions with the tag name
         $callback_count = 0;
-        $album = preg_replace_callback( '#(<(\w+)\s+class=(\'|")wp-caption-text[^\'"]*\3\s*>)([^<]*)(</\2>)#',
-            function ( $m ) use ( $gallery_image_tags, &$callback_count ) {
-                return $m[1] . $gallery_image_tags[$callback_count++] . $m[5];
-            }, $album );      
+        // handle the new <figcaption> tag from WordPress 4.0
+        $album = preg_replace_callback( '#<figure\s.+?</figure>#s', function( $m )
+            use ( $gallery_image_tags, &$callback_count ) {
+            $figure = preg_replace_callback( '#(<figcaption[^>]*>)[^<]*</figcaption>#',
+                function ( $m ) use ( $gallery_image_tags, $callback_count ) {
+                    return $m[1] . $gallery_image_tags[$callback_count] . '</figcaption>';
+            }, $m[0] );
+            $callback_count++;
+            return $figure;
+        }, $album );
+        if ( !$callback_count ) {
+            // handle pre WordPress 4.0
+            $album = preg_replace_callback( '#(<(\w+)\s+class=(\'|")wp-caption-text[^\'"]*\3[^>]*>)([^<]*)(</\2>)#',
+                function ( $m ) use ( $gallery_image_tags, &$callback_count ) {
+                    return $m[1] . $gallery_image_tags[$callback_count++] . $m[5];
+                }, $album );
+        }
         // Since there may be multiple albums use $count to give everything a unique identity
         $content .= "<div id='div-album-$count'>$album</div>";
         // now do the corresponding galleries
         $galleries = '';
         foreach ( $image_ids as $ids ) {
             $galleries .= "<div id='hidden-gallery-$ids[0]' class='hidden-gallery' style='display:none;'>";
-            $galleries .= '<div><button class="button-back" style="float:right">Go Back to Album View</button></div>';
+            $galleries .= '<div><button class="nggml-button-back" style="float:right">Go Back to Album View</button></div>';
             $galleries .= '<br style="clear:both">';
-            $galleries .= do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
-            $galleries .= '<div><button class="button-back" style="float:right" >Go Back to Album View</button></div></div>';
+            $gallery = do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
+            if ( $classes ) {
+                $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes ) . '\'',
+                    $gallery );
+            }
+            $galleries .= $gallery;
+            $galleries .= '<div><button class="nggml-button-back" style="float:right" >Go Back to Album View</button></div></div>';
             $galleries .= '<br style="clear:both">';
         }
         $content .= "<div id='div-galleries-$count'>$galleries</div>";
@@ -446,9 +521,12 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         return false;
     } );
     // install a buttun click handler to go back to album view
-    jQuery( "div#div-galleries-$count button.button-back" ).click( function() {
+    jQuery( "div#div-galleries-$count button.nggml-button-back" ).click( function() {
         jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
         jQuery( "div#div-album-$count" ).css( "display", "block" );        
+        altGallery.metaLocked=false;
+        jQuery("div.nggml-alt-gallery-meta").css("color","black");
+        jQuery("div#nggml-meta-overlay").css({borderColor:"black",display:"none"});
     } );    
 </script>
 EOT;
@@ -472,18 +550,30 @@ add_shortcode( 'nggallery', function ( $atts, $content, $tag ) {
         $gallery_options = ' ' . trim( $gallery_options );
     }
     if ( empty( $id ) ) { return ''; }
-    $ids = $wpdb->get_col(
-        "SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' AND post_parent = $id" );
+    $ids = $wpdb->get_col( <<<EOD
+SELECT ID FROM $wpdb->posts p WHERE p.post_type = 'attachment' AND p.post_mime_type LIKE 'image/%' AND p.post_parent = $id
+    AND NOT EXISTS ( SELECT * FROM $wpdb->term_relationships r, $wpdb->term_taxonomy x, $wpdb->terms t
+        WHERE r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id
+            AND x.taxonomy = 'exclude' AND t.slug = 'yes' AND r.object_id = p.ID )
+EOD
+    );
     if ( empty( $ids ) ) { return ''; }
     $ids = sort_ids_by_priority( $ids );
     $ids = ' ids="' . implode( ',', $ids ) . '"';
     unset( $atts['id'] );
     $args = '';
+    $classes = [];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
+        $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
     }
     // use WordPress's built in gallery to do NextGEN Gallery's nggallery shortcode
-    return '<!-- nggallery start -->' . do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" ) . '<!-- nggallery end -->';
+    $gallery = do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+    if ( $classes ) {
+        $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes ) . '\'',
+            $gallery );
+    }
+    return $gallery;
 } );
 
 /*
@@ -503,11 +593,132 @@ add_shortcode( 'singlepic', function ( $atts, $content, $tag ) {
     $ids = " ids=\"$id\"";
     unset( $atts['id'] );
     $args = '';
+    $classes = [];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
+        $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
     }
     // use WordPress's built in gallery shortcode to do NextGEN Gallery's singlepic shortcode
-    return '<!-- singlepic start -->' . do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" ) . '<!-- singlepic end -->';
+    $gallery = do_shortcode( "[gallery{$ids}{$gallery_options}{$args}]" );
+    if ( $classes ) {
+        $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes ) . '\'',
+            $gallery );
+    }
+    return $gallery;
+} );
+
+add_shortcode( 'album', function ( $atts, $content, $tag ) {
+    global $wpdb;
+    static $count = 0;
+    $count++;
+    $gallery_ids = $wpdb->get_col( "SELECT post_content FROM $wpdb->posts WHERE ID = $atts[id]" );
+    if ( !preg_match_all( '/(\d+)/', $gallery_ids[0], $matches, PREG_PATTERN_ORDER ) ) {
+        return "$atts[id] is an invalid album id";
+    }
+    $gallery_ids = $matches[1];
+    $image_ids = [];
+    $gallery_image_ids = [];
+    $gallery_image_tags = [];
+    foreach ( $gallery_ids as $gallery_id ) {
+        #$ids = $wpdb->get_col( "SELECT ID FROM $wpdb->posts WHERE post_parent = $gallery_id" );
+        $ids = $wpdb->get_col( <<<EOD
+SELECT ID FROM $wpdb->posts p WHERE p.post_type = 'attachment' AND p.post_mime_type LIKE 'image/%'
+    AND p.post_parent = $gallery_id
+    AND NOT EXISTS ( SELECT * FROM $wpdb->term_relationships r, $wpdb->term_taxonomy x, $wpdb->terms t
+        WHERE r.term_taxonomy_id = x.term_taxonomy_id AND x.term_id = t.term_id
+            AND x.taxonomy = 'exclude' AND t.slug = 'yes' AND r.object_id = p.ID )
+EOD
+        );
+        if ( !$ids ) { continue; }
+        // reorder $ids using priorities saved in taxonomy priority
+        $ids = sort_ids_by_priority( $ids );
+        $image_ids[] = $ids;
+        $cols = $wpdb->get_col( "SELECT post_title FROM $wpdb->posts WHERE ID = $gallery_id" );
+        $gallery_image_tags[] = $cols ? $cols[0] : null;
+        $cols = $wpdb->get_col(
+            "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = $gallery_id AND meta_key = '_thumbnail_id'" );
+        $gallery_image_ids[] = $cols ? $cols[0] : null;
+    }
+    $args = '';
+    $classes = [];
+    foreach ( $atts as $att => $att_value ) {
+        $args .= " $att=\"$att_value\"";
+        $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
+    }
+    // for albums make sure link is not set since we want the permalink for preg_replace
+    unset( $atts['link'] );
+    $album_args = '';
+    foreach ( $atts as $att => $att_value ) {
+        $album_args = " $att=\"$att_value\"";
+    }
+    // create an album of galleries
+    // for albums make sure link is not set since we want the permalink for preg_replace
+    $gallery_options = get_option( 'nggallery_for_media_library_gallery_options', '' );
+    $album_gallery_options = preg_replace( '#\slink="\w+\"#', '', $gallery_options );
+    $album = do_shortcode( '[gallery ids="' . implode( ',', $gallery_image_ids ) . "\"{$album_gallery_options}{$album_args}]" );
+    // replace the <a> element with a <span> element since we do not want that link
+    $album = preg_replace( array( '#<a\s.+?attachment_id=(\d+).+?>#', '#</a>#' ),
+        array( '<span id="album-gallery-$1" class="album-gallery-icon">', '</span>' ), $album );
+    // replace the image captions with the tag name
+    $callback_count = 0;
+    // handle the new <figcaption> tag from WordPress 4.0
+    $album = preg_replace_callback( '#<figure\s.+?</figure>#s', function( $m )
+        use ( $gallery_image_tags, &$callback_count ) {
+        $figure = preg_replace_callback( '#(<figcaption[^>]*>)[^<]*</figcaption>#',
+            function ( $m ) use ( $gallery_image_tags, $callback_count ) {
+                return $m[1] . $gallery_image_tags[$callback_count] . '</figcaption>';
+        }, $m[0] );
+        $callback_count++;
+        return $figure;
+    }, $album );
+    if ( !$callback_count ) {
+        // handle pre WordPress 4.0
+        $album = preg_replace_callback( '#(<(\w+)\s+class=(\'|")wp-caption-text[^\'"]*\3[^>]*>)([^<]*)(</\2>)#',
+            function ( $m ) use ( $gallery_image_tags, &$callback_count ) {
+                return $m[1] . $gallery_image_tags[$callback_count++] . $m[5];
+            }, $album );
+    }
+    // Since there may be multiple albums use $count to give everything a unique identity
+    $content .= "<div id='div-album-$count'>$album</div>";
+    // now do the corresponding galleries
+    $galleries = '';
+    for ( $i = 0; $i < count( $image_ids ); $i++ ) {
+        $ids = $image_ids[$i];
+        $galleries .= "<div id='hidden-gallery-$gallery_image_ids[$i]' class='hidden-gallery' style='display:none;'>";
+        $galleries .= '<div><button class="nggml-button-back" style="float:right">Go Back to Album View</button></div>';
+        $galleries .= '<br style="clear:both">';
+        $gallery = do_shortcode( '[gallery ids="' . implode( ',', $ids ) . "\"{$gallery_options}{$args}]" );
+        if ( $classes ) {
+            $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes ) . '\'',
+                $gallery );
+        }
+        $galleries .= $gallery;
+        $galleries .= '<div><button class="nggml-button-back" style="float:right" >Go Back to Album View</button></div></div>';
+        $galleries .= '<br style="clear:both">';
+    }
+    $content .= "<div id='div-galleries-$count'>$galleries</div>";
+    $script = <<<EOT
+<script type="text/javascript">
+    // install a click handler to show the corresponding gallery
+    jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function(e) {
+        jQuery( "div#div-album-$count" ).css( "display", "none" );        
+        jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
+        jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) ).css( "display", "block" );
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+        e.returnValue=false;
+        return false;
+    } );
+    // install a buttun click handler to go back to album view
+    jQuery( "div#div-galleries-$count button.nggml-button-back" ).click( function() {
+        jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
+        jQuery( "div#div-album-$count" ).css( "display", "block" );        
+    } );    
+</script>
+EOT;
+    $content .= $script;
+    return $content;
 } );
 
 function is_nggtags_media_library_request() {
@@ -629,6 +840,7 @@ EOD
                 $image->post_author = get_the_author_meta( 'display_name', $result->post_author );
                 $image->post_mime_type = $result->post_mime_type;
                 $image->guid = wp_get_attachment_url( $result->ID );
+                $image->page_url = get_attachment_link( $result->ID );
             }
             if ( $result->meta_key === '_wp_attachment_metadata' && is_serialized( $result->meta_value ) ) {
                 $image->{$result->meta_key} = unserialize( $result->meta_value );
@@ -655,10 +867,19 @@ if ( !is_admin() ) {
         wp_enqueue_script( 'nggml-search', plugins_url( 'nggml-search.js', __FILE__ ), array( 'jquery' ) );
         $wp_scripts->add_data( 'nggml-search', 'data', 'var nggmlAltGalleryImageWidth='
             . get_option( 'nggml_alt_high_density_gallery_image_width', '64' ) . ';'
+            . 'var nggmlAltGalleryFocusColor="'
+            . get_option( 'nggml_alt_high_density_gallery_focus_color', 'yellow' ) . '";'
             . 'var nggmlAltGalleryEnabled='
             . ( get_option( 'nggml_alt_high_density_gallery_enable', 'enabled' ) === 'enabled' ? 'true;' : 'false;' )
             . 'var ajaxurl="' . admin_url( 'admin-ajax.php' ) . '";' );
     } );
+    add_filter( 'wp_get_attachment_link', function( $link, $id, $size, $permalink, $icon, $text ) {
+        $attachment_link = get_attachment_link( intval( $id ) );
+        if ( strpos( $link, '?attachment_id' ) === false ) {
+            $link = preg_replace( '/<a\s/', "<a data-attachment-link=\"$attachment_link\" ", $link );
+        }
+        return $link;
+    }, 100, 6 );
 }
 
 ?>
