@@ -98,6 +98,10 @@ button#nggml-alt-gallery-focused{
     background-color:magenta;
 }
 
+div.gallery{
+    clear:both;
+}
+
 div.nggml-alt-gallery-container{
     position:absolute;
     left:0px;
@@ -105,7 +109,7 @@ div.nggml-alt-gallery-container{
     width:100%;
     z-index:1000;
     background-color:#f0f0f0;
-    overflow:hidden;
+    /*overflow:hidden;*/
 }
 
 div.nggml-alt-gallery-titles{
@@ -124,16 +128,35 @@ div.nggml-alt-gallery-titles li{
     font-weight:bold;
     list-style-type:none;
     padding:2px 5px;
+    border-width:1px 0px;
+    border-style:solid;
+    border-color:darkgray;
+    margin:0;
 }
 
-div.nggml-alt-gallery-icons{
+div.nggml-alt-gallery-icons,div.nggml-alt-gallery-large{
     width:74%;
     float:left;
     background-color:#f0f0f0;
     border-width:0px;/*2px 2px 2px 2px;*/
     border-style:solid;
     border-color:black;
+    overflow-x:hidden;
     overflow-y:auto;
+    position:relative;
+}
+
+div.nggml-alt-gallery-large{
+    background-color:lightgray;
+}
+
+div.nggml-alt-gallery-large img.nggml-large-image{
+    display:block;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    margin-right:-50%;   /* Why? see http://www.w3.org/Style/Examples/007/center.en.html#vertical */
 }
 
 div.nggml-alt-gallery-icons div.nggml-alt-gallery{
@@ -159,6 +182,11 @@ div.nggml-alt-gallery-meta:before{
 
 div.nggml-alt-gallery-meta.nggml-alt-gallery-meta-image:before{
     vertical-align:super;
+}
+
+div.nggml-alt-gallery-bottom{
+    clear:both;
+    overflow-x:scroll;
 }
 
 div#nggml-meta-overlay{
@@ -194,4 +222,34 @@ div#nggml-meta-overlay  img.nggml-meta-overlay-img{
     padding:0;
     border:1px solid black;
     margin:0 auto;
+}
+
+select.nggml-gallery-select-view{
+    /*font-size:1.2em;*/
+    font-weight:bold;
+    text-align:center;
+    padding:2px 15px;
+    background-color:lightgray;
+    border:3px solid black;
+    border-radius:11px;
+    margin-bottom:30px;
+    float:right;
+}
+
+select.nggml-gallery-select-view:hover{
+    background-color:white;
+}
+
+button.nggml-button-back{
+    font-weight:bold;
+    text-align:center;
+    padding:2px 15px;
+    background-color:lightgray;
+    border:3px solid black;
+    border-radius:11px;
+    float:right;
+}
+
+button.nggml-button-back:hover{
+    background-color:white;
 }

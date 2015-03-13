@@ -29,6 +29,7 @@ global $wpdb;
 $update_limit                          = 25;
 $update_galleries_limit                = $update_limit;
 $update_pictures_limit                 = $update_limit;
+$update_albums_limit                   = $update_limit;
 $update_thumbnails_limit               = $update_limit;
 $update_term_relationships_setup_limit = $update_limit;
 $update_term_relationships_limit       = $update_limit;
@@ -59,6 +60,19 @@ function update_to_wp_media_library() {
             'rewrite'           => array( 'slug' => 'priority' )
         ) );
         register_taxonomy_for_object_type( 'priority', 'attachment' );
+        // exclude taxonomy will be used to save NextGEN Gallery's exclude flag
+        $labels = array(
+            'name'              => _x( 'Exclude', 'taxonomy general name' ),
+            'singular_name'     => _x( 'Exclude', 'taxonomy singular name' ),
+        );  
+        register_taxonomy( 'exclude', 'attachment', array(
+            'label'             => __( 'Exclude' ),
+            'labels'            => $labels,
+            'show_ui'           => true,
+            'show_admin_column' => true,
+            'rewrite'           => array( 'slug' => 'exclude' )
+        ) );
+        register_taxonomy_for_object_type( 'exclude', 'attachment' );
     } );
 
     add_action( 'admin_menu', function () {
@@ -167,9 +181,11 @@ jQuery("#ntfwml_update_button").click( function() {
         
             global $ntfwml_ngg_pictures;
             global $ntfwml_ngg_galleries;
+            global $ntfwml_ngg_album;
             global $ntfwml_options;
             global $update_galleries_limit;
             global $update_pictures_limit;
+            global $update_albums_limit;
             global $update_thumbnails_limit;
             global $update_term_relationships_setup_limit;
             global $update_term_relationships_limit;
@@ -217,11 +233,16 @@ jQuery("#ntfwml_update_button").click( function() {
                         // create a page to be used as an attachment host
                         $post = array(
                             'post_author'  => $result->author,
-                            'post_content' => '[gallery]',
+                            'post_content' => <<<EOD
+<!-- This post is used to hold the pictures in a NextGEN Gallery gallery.
+     This gallery is intended to be displayed using NextGen Gallery's nggallery shortcode. -->
+[gallery]
+EOD
+                            ,
                             'post_excerpt' => $result->galdesc,
                             'post_name'    => $result->name,
                             'post_status'  => 'publish',
-                            'post_title'   => $result->title,
+                            'post_title'   => "Gallery: $result->title",
                             'post_type'    => 'page'
                         );
                         if ( $id = wp_insert_post( $post ) ) {
@@ -308,7 +329,7 @@ jQuery("#ntfwml_update_button").click( function() {
                 $done_pids = $wpdb->get_col( "SELECT meta_value from $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'" );
                 $gallery_paths = $wpdb->get_results( "SELECT gid, path FROM $ngg_galleries", OBJECT_K );
                 $results = $wpdb->get_results( <<<EOD
-SELECT pid, image_slug, galleryid, filename, description, alttext, imagedate, sortorder
+SELECT pid, image_slug, galleryid, filename, description, alttext, imagedate, exclude, sortorder
     FROM $ngg_pictures ORDER BY sortorder ASC
 EOD
                 );
@@ -350,6 +371,8 @@ EOD
                                     update_post_meta( $id, 'TODO:attachment_metadata', $move_results['file'] );
                                     // add a taxonomy priority tag for NextGEN Gallery's sortorder
                                     wp_set_post_terms( $id, 100 * $result->sortorder, 'priority' );
+                                    // save exclude flag in taxonomy exclude
+                                    if ( $result->exclude ) { wp_set_post_terms( $id, 'yes', 'exclude' ); }
                                     // also save the original NextGEN Gallery picture id
                                     update_post_meta( $id, 'pre_update_ngg_pid', $result->pid );
                                     if ( ++$count === $limit ) {
@@ -362,7 +385,51 @@ EOD
                 }
                 return true;
             }
-    
+            
+            function update_albums( $ngg_album, $limit ) {
+                global $wpdb;
+                $new_gids = $wpdb->get_results(
+                    "SELECT meta_value, post_id from $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_gid'", OBJECT_K );
+                $done_ids = $wpdb->get_col( "SELECT meta_value from $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_id'" );
+                $results = $wpdb->get_results(
+                    "SELECT id, name, slug, previewpic, albumdesc, sortorder FROM $ngg_album ORDER BY id" );
+                $count = 0;
+                foreach ( $results as $result ) {
+                    // skip stuff previously done.
+                    if ( !in_array( $result->id, $done_ids ) ) {
+                        if ( empty( $first_id ) ) { $first_id = $result->id; }
+                        $post_content = <<<EOD
+<!-- This post is used to hold the galleries in a NextGEN Gallery album.
+     This album is intended to be displayed using NextGen Gallery's album shortcode. -->
+EOD;
+                        // save galleries in album as
+                        foreach ( unserialize( $result->sortorder ) as $gallery ) {
+                            // translate the old gallery ids to the new gallery ids
+                            $new_gallery = array_key_exists( $gallery, $new_gids ) ? $new_gids[$gallery]->post_id : '';
+                            if ( $post_content ) { $post_content .= "\n<hr>\n"; }
+                            $post_content .= "[nggallery id=\"$new_gallery\" nggid=\"$gallery\"]";
+                        }
+                        // create a page to be used as a gallery host
+                        $post = array(
+                            'post_content' => $post_content,
+                            'post_excerpt' => $result->albumdesc,
+                            'post_name'    => $result->slug,
+                            'post_status'  => 'publish',
+                            'post_title'   => "Album: $result->name",
+                            'post_type'    => 'page'
+                        );
+                        if ( $id = wp_insert_post( $post ) ) {
+                            // also save the original NextGEN Gallery gallery id
+                            update_post_meta( $id, 'pre_update_ngg_id', $result->id );
+                            if ( ++$count === $limit ) {
+                                return "Albums for ids $first_id to $result->id done.";
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            
             /*
              * update_thumbnails() updates the wp_postmeta rows with meta_key = '_thumbnail_id' with the new pid
              * which is now known. This could not be done in update_galleries() because the new pid was not known then.
@@ -466,11 +533,14 @@ EOD
                     "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_gid'", OBJECT_K );
                 $new_pids = $wpdb->get_results(
                     "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_pid'", OBJECT_K );
-                $fix_shortcode = function( $matches ) use ( $new_gids, $new_pids ) {
+                $new_ids = $wpdb->get_results(
+                    "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_id'", OBJECT_K );
+                $fix_shortcode = function( $matches ) use ( $new_gids, $new_pids, $new_ids ) {
                     if ( strpos( $matches[0], 'nggid' ) !== false ) { return $matches[0]; }
-                    $new_ids = $matches[1] == 'nggallery' ? $new_gids : $new_pids;
-                    $fix_id = function( $matches ) use ( $new_ids ) {
-                        $mlid = $new_ids[$matches[3]]->post_id;
+                    $new_xids = $matches[1] === 'nggallery' ? $new_gids
+                        : ( $matches[1] === 'singlepic' ? $new_pids : $new_ids );
+                    $fix_id = function( $matches ) use ( $new_xids ) {
+                        $mlid = $new_xids[$matches[3]]->post_id;
                         return " id=\"$mlid\" nggid=\"$matches[3]\"";
                     };
                     return preg_replace_callback( '#\sid=(("|\')?)(\d+)\1#', $fix_id, $matches[0] );
@@ -481,14 +551,14 @@ EOD
                 };
                 $results = $wpdb->get_results( <<<EOT
 SELECT ID, post_content FROM $wpdb->posts
-    WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' OR post_content LIKE '%[singlepic=%' )
-        AND post_content NOT LIKE '% nggid=%' AND post_status = 'publish' ORDER BY ID
+    WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' OR post_content LIKE '%[singlepic=%'
+        OR post_content LIKE '%[album %' ) AND post_content NOT LIKE '% nggid=%' AND post_status = 'publish' ORDER BY ID
 EOT
                     , OBJECT_K );
                 $first_id = key( $results );
                 $count = 0;
                 foreach ( $results as $post_id => $result ) {
-                    $post_content = preg_replace_callback( '#\[(nggallery|singlepic)\s[^\]]*\]#', $fix_shortcode,
+                    $post_content = preg_replace_callback( '#\[(nggallery|singlepic|album)\s[^\]]*\]#', $fix_shortcode,
                         $result->post_content );
                     $post_content = preg_replace_callback( '#\[singlepic=(\d+)(,?)([^\]]*)\]#', $fix_old_singlepic,
                         $post_content );
@@ -567,7 +637,20 @@ EOT
             }
     
             if ( $ntfwml_options['status'] === 'pictures done' ) {
-                // Pictures done but thumbnails not started or not completed so start or continue the thumbnails.
+                // Pictures done but albums not started or not completed so start or continue the albums.
+                if ( ( $status = update_albums( $ntfwml_ngg_album, $update_albums_limit ) ) === true ) {
+                    // Albums done.
+                    $ntfwml_options['status'] = 'albums done';
+                    $ntfwml_options['messages'][] = 'Albums done.';
+                    update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
+                    send_all_messages_to_browser( $ntfwml_options, true );
+                } else {
+                    send_all_messages_to_browser( $ntfwml_options, true, $status );
+                }
+            }
+            
+            if ( $ntfwml_options['status'] === 'albums done' ) {
+                // Albums done but thumbnails not started or not completed so start or continue the thumbnails.
                 if ( ( $status = update_thumbnails( $update_thumbnails_limit ) ) === true ) {
                     // Thumbnails done.
                     $ntfwml_options['status'] = 'thumbnails done';

@@ -65,6 +65,7 @@ if ( $doaction ) {
             }, array_diff( $initial, $current ) );
             foreach ( $ids as $id ) {
                 wp_set_post_terms( $id, $added, $taxonomy->name, true );
+                ##### TODO: replace with wp_set_object_terms()?
                 wp_remove_object_terms( $id, $removed, $taxonomy->name );
             }
         }
@@ -242,10 +243,17 @@ add_filter( 'posts_where', function( $where ) {
             return $wpdb->prepare( '%s', $slug );
         }, $_REQUEST['filter-post-mime-type'] ) ) . ' ) ';
     }
+    if ( array_key_exists( 'filter-attached-to', $_REQUEST )
+        && array_search( '0-nggml-all', $_REQUEST['filter-attached-to'] ) === FALSE ) {
+        $where .= " AND $wpdb->posts.post_parent IN ( " . implode( ', ', array_map( function( $id ) {
+            global $wpdb;
+            return $wpdb->prepare( '%d', $id );
+        }, $_REQUEST['filter-attached-to'] ) ) . ' ) ';
+    }
     $ids = false;
     foreach ( $_REQUEST as $taxonomy => $slugs ) {
         if ( substr_compare( $taxonomy, 'filter-', 0, 7 ) !== 0 ) { continue; }
-        if ( $taxonomy === 'filter-post-mime-type' ) { continue; }
+        if ( $taxonomy === 'filter-post-mime-type' || $taxonomy === 'filter-attached-to' ) { continue; }
         if ( $slugs[0] === '0-nggml-all' ) { continue; }
         # select is now multiple value so $slugs is an array of taxonomy slugs
         $slugs = implode( ', ', array_map( function( $slug ) {
@@ -516,6 +524,7 @@ function ngg_upload( ) {
   
     wp_register_script( 'media-models-for-nggtags', plugins_url( 'media-models-for-nggtags.js', __FILE__ ),
         array( 'wp-backbone' ) );
+    wp_localize_script( 'media-models-for-nggtags', 'nggmlServerParametersForNggTags', [ 'screenPerPage' => 'TODO:' ] );
     wp_register_script( 'media-for-nggtags', plugins_url( 'media-for-nggtags.js', __FILE__ ),
         array( 'media-models-for-nggtags' ) );
     wp_register_script( 'nggtags-media', plugins_url( 'nggtags-media.js', __FILE__ ),

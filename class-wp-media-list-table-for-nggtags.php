@@ -20,6 +20,8 @@ class WP_Media_List_Table_for_Ngg_Tags extends WP_Media_List_Table {
         $actions['add-tags'] = __( 'Add/Remove Tags' );
         # add support for bulk setting of priorities
         $actions['edit-priority'] = __( 'Set Priorities' );
+        # add support for bulk attached to
+        $actions['attach-to'] = __( 'Attach To' );
         return $actions;
     }
     
@@ -54,6 +56,45 @@ EOD
 ?>
             <option value="<?php echo $type->post_mime_type; ?>">
               <?php echo $type->post_mime_type . ' (' . $type->count . ')'; ?></option>
+<?php
+        }
+?>
+        </select>
+<?php
+    }
+    
+    function upload_to_filter( $hidden ) {
+        global $wpdb;
+        $parents = $wpdb->get_results( <<<EOD
+            SELECT p.post_parent parent_id, IFNULL(q.post_title, 'Unattached') parent, COUNT(*) count
+                FROM $wpdb->posts p LEFT JOIN $wpdb->posts q ON p.post_parent = q.ID
+                WHERE p.post_type = 'attachment' GROUP BY p.post_parent ORDER BY count DESC
+EOD
+            , OBJECT );
+?>
+		<div style="position:relative;top:0px;left:0px;width:0px;height:0px;margin:0px;display:block;float:left;z-index:1000;">
+			<div class="nggml-filter-checkbox-overlay" style="position:absolute;top:0px;left:0px;width:100px;display:none;">
+        <div class="nggml-filter-checkbox-overlay-controls"><button class="nggml-button-close">X</button></div>
+				<input type="checkbox" name="filter-attached-to[]" value="0-nggml-all" checked>
+					<?php echo "All Uploaded to"; ?><br>
+<?php
+        foreach ( $parents as $parent ) {
+?>
+				<input type="checkbox" name="filter-attached-to[]" value="<?php echo $parent->parent_id; ?>">
+					<?php echo $parent->parent . ' (' . $parent->count . ')'; ?><br>
+<?php
+        }
+?>
+			</div>
+		</div>
+        <select name="filter-attached-to[]" class="nggml-filter filter-attached-to"
+			<?php if ( $hidden ) { echo 'style="display:none;"'; } ?>>
+            <option value="0-nggml-all" selected><?php echo "All Uploaded to"; ?></option>
+<?php
+        foreach ( $parents as $parent ) {
+?>
+            <option value="<?php echo $parent->parent_id; ?>">
+              <?php echo $parent->parent . ' (' . $parent->count . ')'; ?></option>
 <?php
         }
 ?>
@@ -117,14 +158,15 @@ EOD
             
             # nggtags version supports mime type filters and tag filters
             $this->type_filter( );
-            $hidden = get_hidden_columns( $this->screen );           
+            $hidden = get_hidden_columns( $this->screen );
             foreach ( $this->get_columns() as $column_key => $column_name) {
                 if ( strpos( $column_key, 'taxonomy-' ) === 0 ) {
                     # Is everything with prefix 'taxonomy-' really a taxonomy?
                     $this->taxonomy_filter( substr( $column_key, 9 ), $column_name, in_array( $column_key, $hidden ) );
                 }
             }
-      
+            $this->upload_to_filter( in_array( 'parent', $hidden ) );
+
             /** This action is documented in wp-admin/includes/class-wp-posts-list-table.php */
             do_action( 'restrict_manage_posts' );
             submit_button( __( 'Filter' ), 'button', false, false, array( 'id' => 'post-query-submit' ) );
@@ -152,6 +194,7 @@ EOD
         # now append the inline data
         ob_start();
         get_inline_data( $post );
+        # TODO: get_inline_data() unfortunately does not return post_excerpt aka caption
         $output .= ob_get_contents();
         ob_end_clean();
         return $output;
@@ -289,6 +332,45 @@ EOD
                         <?php
                         #$thumb = wp_get_attachment_image( $post->ID, array( 80, 60 ), true );
                         ?>
+                    </div></fieldset>
+                    <fieldset class="bulk-attach-to inline-edit-col-left" style="display:none"><div class="inline-edit-col">
+                        <div style="background-color:#c0c0c0;width:25%;float:right;border:2px solid black;border-radius:7px;text-align:center;margin:5px;">
+                            <a href="http://nggtagsforwpml.wordpress.com/#media-library-for-nggtags" target="_blank">help</a>
+                        </div>
+                        <h4><?php echo __( 'Bulk Attach To' ); ?></h4>
+                        <p style="clear:both;margin:0px;">
+                        <div id="attach-to-bulk-title-div">
+                            <div id="attach-to-bulk-titles"></div>
+                        </div>
+                    </div></fieldset>
+                    <fieldset class="bulk-attach-to inline-edit-col-right" style="display:none"><div class="inline-edit-col">        
+                        <!-- below copied and modified from function find_posts_div() from .../wp-admin/includes/template.php -->
+                        <div id="nggml-find-posts" class="nggml-find-box">
+                            <div id="nggml-find-posts-head" class="nggml-find-box-head">
+                                <?php _e( 'Find Posts or Pages' ); ?>
+                                <div id="nggml-find-posts-close"></div>
+                            </div>
+                            <div class="nggml-find-box-inside">
+                                <div class="nggml-find-box-search">
+                                    <?php if ( isset($found_action) && $found_action ) { ?>
+                                        <input type="hidden" name="found_action" value="<?php echo esc_attr($found_action); ?>" />
+                                    <?php } ?>
+                                    <input type="hidden" name="affected" id="affected" value="" />
+                                    <?php wp_nonce_field( 'find-posts', '_nggml_ajax_nonce', false ); ?>
+                                    <label class="screen-reader-text" for="nggml-find-posts-input"><?php _e( 'Search' ); ?></label>
+                                    <input type="text" id="nggml-find-posts-input" name="ps" value="" />
+                                    <span class="spinner"></span>
+                                    <input type="button" id="nggml-find-posts-search" value="<?php esc_attr_e( 'Search' ); ?>" class="button" />
+                                    <div class="clear"></div>
+                                </div>
+                                <div id="nggml-find-posts-response"></div>
+                            </div>
+                            <div class="nggml-find-box-buttons">
+                                <?php submit_button( __( 'Select' ), 'button-primary alignright', 'nggml-find-posts-submit', false ); ?>
+                                <div class="clear"></div>
+                            </div>
+                        </div>
+                        <!-- above copied and modified from function find_posts_div() from .../wp-admin/includes/template.php -->
                     </div></fieldset>
                     <p class="submit inline-edit-save">
                     <a accesskey="c" href="#inline-edit" class="button-secondary cancel alignleft"><?php _e( 'Cancel' ); ?></a>
