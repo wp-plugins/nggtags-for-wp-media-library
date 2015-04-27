@@ -55,6 +55,7 @@ class Search_Media_Library_by_Taxonomy_Widget extends WP_Widget {
 	public function widget( $args, $instance ) {
         global $wpdb;
         extract( $args );
+        echo $args['before_widget'];
 ?>
 <form id="search-types-custom-fields-widget-<?php echo $this->number; ?>" class="nggml-search-fields-form" method="get"
     action="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -260,6 +261,7 @@ jQuery("input[type='button']#nggml-search-fields-reset").click(function(){
 });
 </script>
 <?php
+		echo $args['after_widget'];
 	}
     
     public function update( $new, $old ) {
@@ -632,11 +634,22 @@ EOD
             # finally output all the HTML - header, content and footer
             get_header();
             # emit the appropriate gallery shortcode for content
-            echo '<div style="position:relative;background-color:lightgray;z-index:10000;">';
+            echo '<div class="nggml-search-results-container" style="position:relative;z-index:10000;">';
             echo '<h1 style="text-align:center;margin-bottom:50px;">Media Library Search Results</h1>';
             $gallery_options = get_option( 'search_results_for_media_library_gallery_options', '' );
-            if ( !empty( $gallery_options ) ) { $gallery_options = ' ' . trim( $gallery_options );}
-            echo do_shortcode( "[gallery ids=\"$posts_imploded\"{$gallery_options}]" );
+            $classes = [];
+            if ( !empty( $gallery_options ) ) {
+                if ( preg_match( '/(^|\s)tml_view=("|\')?(\w+)\2/', $gallery_options, $matches ) ) {
+                    $classes[] = "tml_view-$matches[3]";
+                }
+                $gallery_options = ' ' . trim( $gallery_options );
+            }
+            $gallery = do_shortcode( "[gallery ids=\"$posts_imploded\"{$gallery_options}]" );
+            if ( $classes ) {
+                $gallery = preg_replace( '/class=\'gallery\s([^\']+)\'/', 'class=\'gallery $1 ' . implode( ' ', $classes )
+                    . '\'', $gallery );
+            }
+            echo $gallery;
             require_once( dirname( __FILE__ ) . '/nggtags-meta-overlay-template.php' );
             echo '</div>';
             get_footer();

@@ -108,7 +108,7 @@ div.nggml-alt-gallery-container{
     top:0px;
     width:100%;
     z-index:1000;
-    background-color:#f0f0f0;
+    background-color:white;
     /*overflow:hidden;*/
 }
 
@@ -144,19 +144,77 @@ div.nggml-alt-gallery-icons,div.nggml-alt-gallery-large{
     overflow-x:hidden;
     overflow-y:auto;
     position:relative;
+    z-index:0;
 }
 
 div.nggml-alt-gallery-large{
-    background-color:lightgray;
+    background-color:transparent;
+}
+
+div.nggml-alt-gallery-large div.nggml-span{
+    font-size:large;
+    font-weight:bold;
+    padding:20px;
 }
 
 div.nggml-alt-gallery-large img.nggml-large-image{
     display:block;
     position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
+    /*left:50%;*/
+    /*top:50%;*/
+    /*transform:translate(-50%,-50%);*/
     margin-right:-50%;   /* Why? see http://www.w3.org/Style/Examples/007/center.en.html#vertical */
+    /*transition:opacity 3s;*/
+    border-width:0;
+}
+
+div.nggml-alt-gallery-large div.nggml-slide-title{
+    display:block;
+    position:absolute;
+    left:0;
+    top:0.3em;
+    width:100%;
+    height:1.2em;
+    z-index:300;
+    font-weight:bold;
+    color:black;
+    text-align:center;
+    background-color:transparent;
+    opacity:1.0;
+    display:none;
+}
+
+div.nggml-alt-gallery-large div.nggml-slide-controls{
+    display:block;
+    position:absolute;
+    left:0;
+    bottom:1.5em;
+    width:100%;
+    height:1.2em;
+    z-index:300;
+    text-align:center;
+    background-color:transparent;
+    opacity:0.3;
+    display:none;
+}
+
+div.nggml-alt-gallery-large div.nggml-slide-controls:hover{
+    opacity:1.0;
+}
+
+div.nggml-alt-gallery-large div.nggml-slide-controls button.nggml-slide-button{
+    display:inline-block;
+    width:4em;
+    font-weight:bold;
+    color:black;
+    background-color:gray;
+    padding:0;
+    border:3px solid black;
+    margin-left:5px;
+    margin-right:5px;
+}
+
+div.nggml-alt-gallery-large div.nggml-slide-controls button.nggml-slide-button:hover{
 }
 
 div.nggml-alt-gallery-icons div.nggml-alt-gallery{
@@ -222,6 +280,13 @@ div#nggml-meta-overlay  img.nggml-meta-overlay-img{
     padding:0;
     border:1px solid black;
     margin:0 auto;
+}
+
+div.nggml-meta-overlay-desc img{
+    border:0px none;
+    height:auto;
+    max-width:100%;
+    vertical-align:middle;
 }
 
 select.nggml-gallery-select-view{

@@ -33,7 +33,11 @@ $ntfwml_ngg_album     = $wpdb->prefix . 'ngg_album';
 
 // Are there any NextGEN Gallery pictures?
 
-$tables = $wpdb->get_col( "SHOW TABLES LIKE '$ntfwml_ngg_pictures'" );
+try {
+    $tables = @$wpdb->get_col( "SHOW TABLES LIKE '$ntfwml_ngg_pictures'" );
+} catch ( Exception $e ) {
+    $tables = [];
+}
 $ntfwml_ngg_pictures_count = !$tables ? 0 : $wpdb->get_var( "SELECT COUNT(*) FROM $ntfwml_ngg_pictures" );
 
 // What is the current state of the update?
@@ -62,8 +66,28 @@ Since the NextGEN Gallery shortcodes -
 <a href="http://nggtagsforwpml.wordpress.com/#nggallery-singlepic" target="_blank">singlepic</a> - are implemented
 using WordPress's gallery shortcode the options are the same as
 <a href="http://codex.wordpress.org/Gallery_Shortcode" target="_blank">the options of WordPress's gallery shortcode</a>.
-These options will automatically be added to the corresponding shortcodes in your post content.
+These options will automatically be added to the corresponding shortcodes in your post content. Additionally, the option
+<a href="http://nggtagsforwpml.wordpress.com/#tml_view" target="_blank">tml_view</a> can be used to specify the initial view of the gallery. The values of this option are standard, titles, large and
+slideshow. These settings will be overridden by options specified with the shortcode. To display only the standard WordPress
+gallery view set tml_view to standard and disable the alternate gallery views option.
 </div>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+    jQuery("input#submit[type='submit'][name='submit']").parent().append('&nbsp;\
+<input type="button" name="nggml-clear" id="nggml-clear" class="button button-primary" \
+value="Remove All Options from Database" />');
+    jQuery("input#nggml-clear[type='button'][name='nggml-clear']").click(function(){
+        if(window.prompt("This will remove all settings including taxonomies and search widget parameters from the database. \
+This is probably only useful if you will be removing this plugin or you really want to re-specify everything. \
+Enter \"remove\" to continue")==="remove"){
+            jQuery.post(ajaxurl,{action:"nggml_clear_options_from_database"},function(r){
+                window.alert(r);
+                document.location.reload(true);
+            });
+        }
+    });
+});
+</script>
 <?php
         }, 'nggtags_for_media_library_settings_page' );
         
@@ -73,7 +97,7 @@ These options will automatically be added to the corresponding shortcodes in you
 ?>
 <input id="nggtags_for_media_library_gallery_options" name="nggtags_for_media_library_gallery_options" type="text"
     size="40" value='<?php echo get_option( 'nggtags_for_media_library_gallery_options' ); ?>'
-    placeholder='e.g. size="thumbnail" link="file" columns="4"'/>
+    placeholder='e.g. tml_view="slideshow" columns="6" link="file"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
@@ -83,7 +107,17 @@ These options will automatically be added to the corresponding shortcodes in you
 ?>
 <input id="nggallery_for_media_library_gallery_options" name="nggallery_for_media_library_gallery_options" type="text"
     size="40" value='<?php echo get_option( 'nggallery_for_media_library_gallery_options' ); ?>'
-    placeholder='e.g. size="thumbnail" link="file" columns="4"'/>
+    placeholder='e.g. tml_view="large" columns="6" link="file"'/>
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
+    # settings field for gallery options for slideshow shortcode
+    add_settings_field( 'slideshow_for_media_library_gallery_options', 'slideshow options',
+        function () {
+?>
+<input id="slideshow_for_media_library_gallery_options" name="slideshow_for_media_library_gallery_options" type="text"
+    size="40" value='<?php echo get_option( 'slideshow_for_media_library_gallery_options' ); ?>'
+    placeholder='e.g. link="file"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
@@ -103,7 +137,7 @@ These options will automatically be added to the corresponding shortcodes in you
 ?>
 <input id="search_results_for_media_library_gallery_options" name="search_results_for_media_library_gallery_options"
     type="text" size="40" value='<?php echo get_option( 'search_results_for_media_library_gallery_options' ); ?>'
-    placeholder='e.g. size="e.g. size="thumbnail" link="file" columns="4"'/>
+    placeholder='e.g. tml_view="titles" columns="6" link="file"'/>
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
@@ -117,7 +151,7 @@ These options will automatically be added to the corresponding shortcodes in you
     }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
     # settings field for alt high density gallery view
-    add_settings_field( 'nggml_alt_high_density_gallery_enable', 'enable alternate gallery view',
+    add_settings_field( 'nggml_alt_high_density_gallery_enable', 'enable alternate gallery views',
         function () {
 ?>
 <input id="nggml_alt_high_density_gallery_enable" name="nggml_alt_high_density_gallery_enable"
@@ -126,6 +160,8 @@ These options will automatically be added to the corresponding shortcodes in you
 <?php
             echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
+    # settings field for icon images width
     add_settings_field( 'nggml_alt_high_density_gallery_image_width', 'alternate gallery view image width',
         function () {
 ?>
@@ -135,6 +171,8 @@ These options will automatically be added to the corresponding shortcodes in you
 <?php
             echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
+    # settings field for highlight color
     add_settings_field( 'nggml_alt_high_density_gallery_focus_color', 'alternate gallery view highlight color',
         function () {
 ?>
@@ -145,14 +183,38 @@ These options will automatically be added to the corresponding shortcodes in you
             echo '&nbsp;&nbsp;for the user (not admin) alternate gallery view';
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
         
+    # settings field for stretch image to fit option
+    add_settings_field( 'nggml_stretch_to_fit_enable', 'enable stretch image to fit view',
+        function () {
+?>
+<input id="nggml_stretch_to_fit_enable" name="nggml_stretch_to_fit_enable"
+    type="checkbox" value="enabled"
+    <?php echo ( get_option( 'nggml_stretch_to_fit_enable', '' ) === 'enabled' ? ' checked' : '' ); ?> />
+<?php
+            echo '&nbsp;&nbsp;for the large image and slideshow views';
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+                
+    # settings field for slide show interval
+    add_settings_field( 'nggml_slideshow_interval', 'slide show time interval in milliseconds',
+        function () {
+?>
+<input id="nggml_slideshow_interval" name="nggml_slideshow_interval"
+    type="number" min="1000" max="100000" size="40"
+    value='<?php echo get_option( 'nggml_slideshow_interval', '5000' ); ?>' />
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+        
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
+    register_setting( 'nggtags_for_media_library_settings', 'slideshow_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'singlepic_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'search_results_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_user_css_file_url' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_enable' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_image_width' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_alt_high_density_gallery_focus_color' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_stretch_to_fit_enable' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_slideshow_interval' );
     
     add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
         function () {
@@ -206,9 +268,9 @@ your own tag taxonomies</a> for Media Library images.
     size="40" value="<?php echo $taxonomy_name_value; ?>" placeholder="enter new taxonomy name" />
 <?php
             if ( $use_i === 2 ) {
-                echo '&nbsp;&nbsp;this number sets the order in a TLM gallery - smaller is earlier';
+                echo '&nbsp;&nbsp;this number sets the order in a TML gallery - smaller is earlier';
             } else if ( $use_i === 3 ) {
-                echo '&nbsp;&nbsp;a yes value will exclude this image from a TLM gallery';
+                echo '&nbsp;&nbsp;a yes value will exclude this image from a TML gallery';
             }
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_taxonomy_section' );
         add_settings_field( $taxonomy_slug, "Taxonomy Slug $use_i",
@@ -402,14 +464,17 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
     // pass all parameters except 'gallery' and 'album' to the WordPress builtin 'gallery' shortcode
     unset( $atts['gallery'], $atts['album'] );
     $args = '';
-    $classes = [];
+    $classes = [ "tag-$tag" ];
+    $gallery_options = get_option( 'nggtags_for_media_library_gallery_options', '' );
+    if ( !empty( $gallery_options ) ) {
+        if ( preg_match( '/(^|\s)tml_view=("|\')?(\w+)\2/', $gallery_options, $matches ) ) {
+            $classes[] = "tml_view-$matches[3]";
+        }
+        $gallery_options = ' ' . trim( $gallery_options );
+    }
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
         $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
-    }
-    $gallery_options = get_option( 'nggtags_for_media_library_gallery_options', '' );
-    if ( !empty( $gallery_options ) ) {
-        $gallery_options = ' ' . trim( $gallery_options );
     }
     if ( !empty( $gallery ) ) {
         // this is a gallery
@@ -461,11 +526,14 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
         unset( $atts['link'] );
         $album_args = '';
         foreach ( $atts as $att => $att_value ) {
+            if ( $att === 'link' || $att === 'tml_view' ) { continue; }
             $album_args = " $att=\"$att_value\"";
         }
         // create an album of galleries
         // for albums make sure link is not set since we want the permalink for preg_replace
-        $album_gallery_options = preg_replace( '#\slink="\w+\"#', '', $gallery_options );
+        $album_gallery_options = preg_replace( '#(^|\s)link=("|\')?\w+\2#', '', $gallery_options );
+        // also for albums the main view must be standard
+        $album_gallery_options = preg_replace( '#(^|\s)tml_view=("|\')?\w+\2#', '', $album_gallery_options );
         $album = do_shortcode( '[gallery ids="' . implode( ',', $gallery_image_ids ) . "\"{$album_gallery_options}{$album_args}]" );
         // replace the <a> element with a <span> element since we do not want that link
         $album = preg_replace( array( '#<a\s.+?attachment_id=(\d+).+?>#', '#</a>#' ),
@@ -513,7 +581,9 @@ add_shortcode( 'nggtags', function ( $atts, $content, $tag ) {
     jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function(e) {
         jQuery( "div#div-album-$count" ).css( "display", "none" );        
         jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
-        jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) ).css( "display", "block" );
+        var gallery=jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) );
+        gallery.css( "display", "block" );
+        gallery.find("select.nggml-gallery-select-view").change();
         e.stopImmediatePropagation();
         e.stopPropagation();
         e.preventDefault();
@@ -540,13 +610,19 @@ EOT;
  * construct and returns this result.
  */
  
-add_shortcode( 'nggallery', function ( $atts, $content, $tag ) {
+function do_nggallery( $atts, $content, $tag ) {
     global $wpdb;
     if ( !$tag ) { $tag = $atts[0]; }
     extract( $atts );
+    $classes = [ "tag-$tag" ];
+    if ( $tag === 'slideshow' ) { $classes[] = 'tml_view-slideshow'; }
     // get the global nggallery options
-    $gallery_options = get_option( 'nggallery_for_media_library_gallery_options', '' );
+    $gallery_options = get_option( $tag === 'slideshow' ? 'slideshow_for_media_library_gallery_options'
+        : 'nggallery_for_media_library_gallery_options', '' );
     if ( !empty( $gallery_options ) ) {
+        if ( preg_match( '/(^|\s)tml_view=("|\')?(\w+)\2/', $gallery_options, $matches ) ) {
+            $classes[] = "tml_view-$matches[3]";
+        }
         $gallery_options = ' ' . trim( $gallery_options );
     }
     if ( empty( $id ) ) { return ''; }
@@ -562,7 +638,6 @@ EOD
     $ids = ' ids="' . implode( ',', $ids ) . '"';
     unset( $atts['id'] );
     $args = '';
-    $classes = [];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
         $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
@@ -574,7 +649,10 @@ EOD
             $gallery );
     }
     return $gallery;
-} );
+}
+
+add_shortcode( 'nggallery', 'NggTags_for_Media_Library\do_nggallery' );
+add_shortcode( 'slideshow', 'NggTags_for_Media_Library\do_nggallery' );
 
 /*
  * singlepic_func() constructs a WordPress 'gallery' shortcode from the 'singlepic' shortcode and calls do_shortcode on the 
@@ -593,7 +671,7 @@ add_shortcode( 'singlepic', function ( $atts, $content, $tag ) {
     $ids = " ids=\"$id\"";
     unset( $atts['id'] );
     $args = '';
-    $classes = [];
+    $classes = [ "tag-$tag" ];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
         $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
@@ -639,8 +717,15 @@ EOD
             "SELECT meta_value FROM $wpdb->postmeta WHERE post_id = $gallery_id AND meta_key = '_thumbnail_id'" );
         $gallery_image_ids[] = $cols ? $cols[0] : null;
     }
+    $classes = [ "tag-$tag" ];
+    $gallery_options = get_option( 'nggallery_for_media_library_gallery_options', '' );
+    if ( !empty( $gallery_options ) ) {
+        if ( preg_match( '/(^|\s)tml_view=("|\')?(\w+)\2/', $gallery_options, $matches ) ) {
+            $classes[] = "tml_view-$matches[3]";
+        }
+        $gallery_options = ' ' . trim( $gallery_options );
+    }
     $args = '';
-    $classes = [];
     foreach ( $atts as $att => $att_value ) {
         $args .= " $att=\"$att_value\"";
         $classes[] = $att . '-' . preg_replace( '/[^a-zA-Z0-9_]/', '_', $att_value );
@@ -649,12 +734,14 @@ EOD
     unset( $atts['link'] );
     $album_args = '';
     foreach ( $atts as $att => $att_value ) {
+        if ( $att === 'link' || $att === 'tml_view' ) { continue; }
         $album_args = " $att=\"$att_value\"";
     }
     // create an album of galleries
     // for albums make sure link is not set since we want the permalink for preg_replace
-    $gallery_options = get_option( 'nggallery_for_media_library_gallery_options', '' );
-    $album_gallery_options = preg_replace( '#\slink="\w+\"#', '', $gallery_options );
+    $album_gallery_options = preg_replace( '#(^|\s)link=("|\')?\w+\2#', '', $gallery_options );
+    // also for albums the main view must be standard
+    $album_gallery_options = preg_replace( '#(^|\s)tml_view=("|\')?\w+\2#', '', $album_gallery_options );
     $album = do_shortcode( '[gallery ids="' . implode( ',', $gallery_image_ids ) . "\"{$album_gallery_options}{$album_args}]" );
     // replace the <a> element with a <span> element since we do not want that link
     $album = preg_replace( array( '#<a\s.+?attachment_id=(\d+).+?>#', '#</a>#' ),
@@ -703,7 +790,9 @@ EOD
     jQuery( "div#div-album-$count span.album-gallery-icon" ).click( function(e) {
         jQuery( "div#div-album-$count" ).css( "display", "none" );        
         jQuery( "div#div-galleries-$count div.hidden-gallery" ).css( "display", "none" );
-        jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) ).css( "display", "block" );
+        var gallery=jQuery( "div#div-galleries-$count div#hidden-gallery-" + this.id.substr( 14 ) );
+        gallery.css( "display", "block" );
+        gallery.find("select.nggml-gallery-select-view").change();
         e.stopImmediatePropagation();
         e.stopPropagation();
         e.preventDefault();
@@ -853,6 +942,28 @@ EOD
     };
     add_action( 'wp_ajax_nggml_get_attachment_meta',        $nggml_get_attachment_meta );
     add_action( 'wp_ajax_nopriv_nggml_get_attachment_meta', $nggml_get_attachment_meta );
+    add_action( 'wp_ajax_nggml_clear_options_from_database', function() {
+        $deleted = 0;
+        foreach ( [ 'nggtags_for_media_library_gallery_options', 'nggallery_for_media_library_gallery_options',
+            'slideshow_for_media_library_gallery_options', 'singlepic_for_media_library_gallery_options',
+            'search_results_for_media_library_gallery_options', 'nggml_user_css_file_url',
+            'nggml_alt_high_density_gallery_enable', 'nggml_alt_high_density_gallery_image_width',
+            'nggml_alt_high_density_gallery_focus_color', 'nggml_stretch_to_fit_enable', 'nggml_slideshow_interval',
+            'nggml_screen_options', 'widget_search_media_library_by_taxonomy_widget',
+            'nggtags_for_media_library_taxonomy_slug_1', 'nggtags_for_media_library_taxonomy_name_1',
+            'nggtags_for_media_library_taxonomy_slug_2', 'nggtags_for_media_library_taxonomy_name_2',
+            'nggtags_for_media_library_taxonomy_slug_3', 'nggtags_for_media_library_taxonomy_name_3',
+            'nggtags_for_media_library_taxonomy_slug_4', 'nggtags_for_media_library_taxonomy_name_4',
+            'nggtags_for_media_library_taxonomy_slug_5', 'nggtags_for_media_library_taxonomy_name_5',
+            'nggtags_for_media_library_taxonomy_slug_6', 'nggtags_for_media_library_taxonomy_name_6',
+            'nggtags_for_media_library_taxonomy_slug_7', 'nggtags_for_media_library_taxonomy_name_7',
+            'nggtags_for_media_library_taxonomy_slug_8', 'nggtags_for_media_library_taxonomy_name_8',
+            'nggtags_for_media_library_taxonomy_slug_9', 'nggtags_for_media_library_taxonomy_name_9' ] as $option ) {
+            if ( delete_option( $option ) ) { ++$deleted; }
+        }
+        echo "$deleted options deleted.";
+        wp_die();
+    } );
 }
 
 if ( !is_admin() ) {
@@ -871,6 +982,10 @@ if ( !is_admin() ) {
             . get_option( 'nggml_alt_high_density_gallery_focus_color', 'yellow' ) . '";'
             . 'var nggmlAltGalleryEnabled='
             . ( get_option( 'nggml_alt_high_density_gallery_enable', 'enabled' ) === 'enabled' ? 'true;' : 'false;' )
+            . 'var nggmlStretchToFit='
+            . ( get_option( 'nggml_stretch_to_fit_enable', '' ) === 'enabled' ? 'true;' : 'false;' )
+            . 'var nggmlSlideShowInterval='
+            . get_option( 'nggml_slideshow_interval', '5000' ) . ';'
             . 'var ajaxurl="' . admin_url( 'admin-ajax.php' ) . '";' );
     } );
     add_filter( 'wp_get_attachment_link', function( $link, $id, $size, $permalink, $icon, $text ) {
