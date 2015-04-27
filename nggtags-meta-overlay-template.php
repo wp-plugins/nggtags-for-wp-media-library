@@ -18,7 +18,7 @@ Author: {{post_author}}<br>
 Image: <a href="{{guid}}" target="blank">{{guid}}</a><br>
 Page: <a href="{{page_url}}" target="blank">{{page_url}}</a><br>
 <img class="nggml-meta-overlay-img" src="{{guid}}" width="{{img_width}}">
-Description: {{post_content}}<br>
+Description:<div class="nggml-meta-overlay-desc" style="border:1px solid black;padding:3px;overflow:auto;">{{post_content}}</div>
     </script>
 </div>
 <?php

@@ -88,14 +88,13 @@ function update_to_wp_media_library() {
 ?>
 <div style="padding:10px 20px;">
 <h1>NextGEN Gallery's nggtags for WordPress's Media Library</h1>
-This feature lets you use the shortcode 'nggtags' on Wordpress's Media Library images.
+This feature lets you use the shortcode 'nggtags', 'nggallery', 'slideshow', 'album' and 'singlepic' on Wordpress's Media Library images.
 If you have an existing NextGEN Gallery database you must update your database.
 This update will copy NextGEN Gallery's pictures and galleries to WordPress's Media Library.
-(NextGEN Gallery's albums are ignored.)
 After this update NextGEN Gallery will not work.
 NextGEN pictures and galleries will now exists as WordPress Media Library images and galleries
-and the shortcode 'nggtags' will work with the Media Library images.
-Except for 'gallery' and 'album' the parameters to the shortcode 'nggtags' are parameters to
+and the shortcodes will work with the Media Library images.
+Except for 'gallery' and 'album' the parameters to the shortcodes are parameters to
 WordPress's 'gallery' shortcode in particular you may need to specify
 '<strong>link=&quot;file&quot;</strong>' to make some lightboxes to work.
 You may want to <a href="<?php echo admin_url( 'options-media.php' ); ?>">set the image sizes</a> before starting the update.
@@ -234,8 +233,12 @@ jQuery("#ntfwml_update_button").click( function() {
                         $post = array(
                             'post_author'  => $result->author,
                             'post_content' => <<<EOD
-<!-- This post is used to hold the pictures in a NextGEN Gallery gallery.
-     This gallery is intended to be displayed using NextGen Gallery's nggallery shortcode. -->
+<!--
+    This post is used to hold the pictures in a NextGEN Gallery gallery.
+    This gallery is intended to be displayed using NextGen Gallery's nggallery or slideshow shortcode.
+    I.e., this post is not intended to be displayed directly but functions as a container for images.
+    However, you can display this post to verify the container contains the desired images.
+-->
 [gallery]
 EOD
                             ,
@@ -399,8 +402,12 @@ EOD
                     if ( !in_array( $result->id, $done_ids ) ) {
                         if ( empty( $first_id ) ) { $first_id = $result->id; }
                         $post_content = <<<EOD
-<!-- This post is used to hold the galleries in a NextGEN Gallery album.
-     This album is intended to be displayed using NextGen Gallery's album shortcode. -->
+<!--
+    This post is used to hold the galleries in a NextGEN Gallery album.
+    This album is intended to be displayed using NextGen Gallery's album shortcode.
+    I.e., this post is not intended to be displayed directly but functions as a container for galleries.
+    However, you can display this post to verify the container contains the desired galleries.
+-->
 EOD;
                         // save galleries in album as
                         foreach ( unserialize( $result->sortorder ) as $gallery ) {
@@ -537,7 +544,7 @@ EOD
                     "SELECT meta_value, post_id FROM $wpdb->postmeta WHERE meta_key = 'pre_update_ngg_id'", OBJECT_K );
                 $fix_shortcode = function( $matches ) use ( $new_gids, $new_pids, $new_ids ) {
                     if ( strpos( $matches[0], 'nggid' ) !== false ) { return $matches[0]; }
-                    $new_xids = $matches[1] === 'nggallery' ? $new_gids
+                    $new_xids = ( $matches[1] === 'nggallery' || $matches[1] === 'slideshow' ) ? $new_gids
                         : ( $matches[1] === 'singlepic' ? $new_pids : $new_ids );
                     $fix_id = function( $matches ) use ( $new_xids ) {
                         $mlid = $new_xids[$matches[3]]->post_id;
@@ -552,14 +559,15 @@ EOD
                 $results = $wpdb->get_results( <<<EOT
 SELECT ID, post_content FROM $wpdb->posts
     WHERE ( post_content LIKE '%[nggallery %' OR post_content LIKE '%[singlepic %' OR post_content LIKE '%[singlepic=%'
-        OR post_content LIKE '%[album %' ) AND post_content NOT LIKE '% nggid=%' AND post_status = 'publish' ORDER BY ID
+            OR post_content LIKE '%[album %' OR post_content LIKE '%[slideshow %' )
+        AND post_content NOT LIKE '% nggid=%' AND post_status = 'publish' ORDER BY ID
 EOT
                     , OBJECT_K );
                 $first_id = key( $results );
                 $count = 0;
                 foreach ( $results as $post_id => $result ) {
-                    $post_content = preg_replace_callback( '#\[(nggallery|singlepic|album)\s[^\]]*\]#', $fix_shortcode,
-                        $result->post_content );
+                    $post_content = preg_replace_callback( '#\[(nggallery|singlepic|album|slideshow)\s[^\]]*\]#',
+                        $fix_shortcode, $result->post_content );
                     $post_content = preg_replace_callback( '#\[singlepic=(\d+)(,?)([^\]]*)\]#', $fix_old_singlepic,
                         $post_content );
                     $post = array(
