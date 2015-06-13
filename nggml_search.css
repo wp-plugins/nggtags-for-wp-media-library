@@ -217,6 +217,14 @@ div.nggml-alt-gallery-large div.nggml-slide-controls button.nggml-slide-button{
 div.nggml-alt-gallery-large div.nggml-slide-controls button.nggml-slide-button:hover{
 }
 
+div.nggml-alt-gallery-large div.nggml-slide-controls button#nggml-info-button::after{
+    content: "\f348";
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    font: normal 16px/1 'dashicons';
+    vertical-align: bottom;
+}
+
 div.nggml-alt-gallery-icons div.nggml-alt-gallery{
     padding:0px;
     border-width:7px;
@@ -232,10 +240,10 @@ div.nggml-alt-gallery-meta{
 
 div.nggml-alt-gallery-meta:before{
     content: "\f348";
-	display: inline-block;
-	-webkit-font-smoothing: antialiased;
-	font: normal 16px/1 'dashicons';
-	vertical-align: baseline;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    font: normal 16px/1 'dashicons';
+    vertical-align: baseline;
 }
 
 div.nggml-alt-gallery-meta.nggml-alt-gallery-meta-image:before{
