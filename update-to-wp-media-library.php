@@ -1,4 +1,5 @@
 <?php
+namespace NggTags_for_Media_Library;
 
 /*  
     Copyright 2013  Magenta Cuda
@@ -17,8 +18,6 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-namespace NggTags_for_Media_Library;
-
 global $wpdb;
  
 // Parameters
@@ -36,9 +35,9 @@ $update_term_relationships_limit       = $update_limit;
 $update_post_content_limit             = $update_limit;
 $update_attachment_metadata_limit      = $update_limit;
 
-update_to_wp_media_library();
+update_to_wp_media_library( $tml_post_type );
 
-function update_to_wp_media_library() {
+function update_to_wp_media_library( $tml_post_type ) {
     
     /*
      * Update not started or not completed so start or continue the update.
@@ -46,7 +45,10 @@ function update_to_wp_media_library() {
      * If the update is interrupted the update is re-startable since there is enough state in the database.
      */
      
-    add_action( 'init', function () {
+    add_action( 'init', function () use ( $tml_post_type ) {
+        // register post type for converted galleries and albums
+        register_post_type( 'tml_galleries_albums', $tml_post_type );
+
         // priority taxonomy will be used to replace NextGEN Gallery's sortorder
         $labels = array(
             'name'              => _x( 'Priority', 'taxonomy general name' ),
@@ -246,7 +248,7 @@ EOD
                             'post_name'    => $result->name,
                             'post_status'  => 'publish',
                             'post_title'   => "Gallery: $result->title",
-                            'post_type'    => 'page'
+                            'post_type'    => 'tml_galleries_albums'
                         );
                         if ( $id = wp_insert_post( $post ) ) {
                             // previewpic cannot be correctly done now since new pid of previewpic is not known so mark it
@@ -423,7 +425,7 @@ EOD;
                             'post_name'    => $result->slug,
                             'post_status'  => 'publish',
                             'post_title'   => "Album: $result->name",
-                            'post_type'    => 'page'
+                            'post_type'    => 'tml_galleries_albums'
                         );
                         if ( $id = wp_insert_post( $post ) ) {
                             // also save the original NextGEN Gallery gallery id
@@ -753,10 +755,13 @@ EOT
             
             // If we get here then everything is done.
             $ntfwml_options['messages'][] = 'The conversion of NextGEN Gallery to WordPress Media Library is done.';
+            $ntfwml_options['messages'][] = 'Go to <a href="'
+                . admin_url( 'options-general.php?page=nggtags_for_media_library_settings_page' )
+                . '">Settings-> Tags for Media Library</a> to configure TML.';
             // Send all messages to browser.
             send_all_messages_to_browser( $ntfwml_options, false );
             // clean up transient data from wp_options.
-            $ntfwml_options = array( 'status' => 'update done' );
+            $ntfwml_options = array( 'status' => 'update done', 'version' => '1.1' );
             update_option( 'nggtags_for_wp_media_library', $ntfwml_options );
             die();
         } );

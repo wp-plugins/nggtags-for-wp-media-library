@@ -639,8 +639,10 @@ EOD
             $gallery_options = get_option( 'search_results_for_media_library_gallery_options', '' );
             $classes = [];
             if ( !empty( $gallery_options ) ) {
-                if ( preg_match( '/(^|\s)tml_view=("|\')?(\w+)\2/', $gallery_options, $matches ) ) {
-                    $classes[] = "tml_view-$matches[3]";
+                if ( preg_match_all( '/(^|\s)(tml_views?)=("|\')?([\w\s]+)\3/', $gallery_options, $all_matches, PREG_SET_ORDER ) ) {
+                    foreach ( $all_matches as $matches ) {
+                        $classes[] = "$matches[2]-" . str_replace( ' ', '_', $matches[4] );
+                    }
                 }
                 $gallery_options = ' ' . trim( $gallery_options );
             }
