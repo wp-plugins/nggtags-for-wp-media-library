@@ -149,6 +149,7 @@ div.nggml-alt-gallery-icons,div.nggml-alt-gallery-large{
 
 div.nggml-alt-gallery-large{
     background-color:transparent;
+    overflow:hidden;
 }
 
 div.nggml-alt-gallery-large div.nggml-span{

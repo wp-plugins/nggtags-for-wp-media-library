@@ -3,7 +3,7 @@ Contributors: Black 68 Charger,Magenta Cuda
 Tags: taxonomy tags,media library,NextGEN Gallery,nggtags,convertor,alternative,replacement
 Requires at least: 4.0
 Tested up to: 4.2
-Stable tag: 1.1
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 10. High Density Media Library View
 
 == Changelog ==
+= 1.1.1 =
+* added fade in, explode, rotate and reveal transitions to slideshow
 = 1.1 =
 * added full browser window mode for slideshow
 * added image details popup to slideshow view
@@ -97,6 +99,8 @@ No conversion is necessary and the plugin can still be used as implementation of
 * Initial release.
 
 == Upgrade Notice ==
+= 1.1.1 =
+* added fade in, explode, rotate and reveal transitions to slideshow
 = 1.1 =
 * added full browser window mode for slideshow
 * added image details popup to slideshow view
