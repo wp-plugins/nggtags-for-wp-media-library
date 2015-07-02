@@ -5,7 +5,7 @@
  * Plugin URI:    http://nggtagsforwpml.wordpress.com/
  * Description:   Some features for using taxonomy tags with WordPress Media Library.
  * Documentation: http://nggtagsforwpml.wordpress.com/
- * Version:       1.1
+ * Version:       1.1.1
  * Author:        Black 68 Charger, Magenta Cuda  
  * Author URI:    http://nggtagsforwpml.wordpress.com/
  * License:       GPL2

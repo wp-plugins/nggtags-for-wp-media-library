@@ -265,7 +265,25 @@ Enter \"remove\" to continue")==="remove"){
     value='<?php echo get_option( 'nggml_slideshow_interval', '5000' ); ?>' />
 <?php
         }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
-        
+
+    # settings field for css transition for slide show
+    add_settings_field( 'nggml_transition', 'slide show transition',
+        function () {
+            $transition = get_option( 'nggml_transition', 'slide-left' );
+?>
+<input id="nggml_transition" name="nggml_transition" type="radio" value="slide-left"
+    <?php echo $transition === 'slide-left' ? 'checked' : ''; ?>>Slide Left&nbsp;&nbsp;&nbsp;&nbsp;
+<input id="nggml_transition" name="nggml_transition" type="radio" value="fade"
+    <?php echo $transition === 'fade' ? 'checked' : ''; ?>>Fade In&nbsp;&nbsp;&nbsp;&nbsp;
+<input id="nggml_transition" name="nggml_transition" type="radio" value="explode"
+    <?php echo $transition === 'explode' ? 'checked' : ''; ?>>Explode&nbsp;&nbsp;&nbsp;&nbsp;
+<input id="nggml_transition" name="nggml_transition" type="radio" value="rotation"
+    <?php echo $transition === 'rotation' ? 'checked' : ''; ?>>Rotate&nbsp;&nbsp;&nbsp;&nbsp;
+<input id="nggml_transition" name="nggml_transition" type="radio" value="reveal-left"
+    <?php echo $transition === 'reveal-left' ? 'checked' : ''; ?>>Reveal Left&nbsp;&nbsp;&nbsp;&nbsp;
+<?php
+        }, 'nggtags_for_media_library_settings_page', 'nggtags_for_media_library_settings_section' );
+
     register_setting( 'nggtags_for_media_library_settings', 'nggtags_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'nggallery_for_media_library_gallery_options' );
     register_setting( 'nggtags_for_media_library_settings', 'slideshow_for_media_library_gallery_options' );
@@ -279,6 +297,7 @@ Enter \"remove\" to continue")==="remove"){
     register_setting( 'nggtags_for_media_library_settings', 'nggml_preserve_aspect_ratio_enable' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_use_full_screen_slideshow_enable' );
     register_setting( 'nggtags_for_media_library_settings', 'nggml_slideshow_interval' );
+    register_setting( 'nggtags_for_media_library_settings', 'nggml_transition' );
     
     add_settings_section( 'nggtags_for_media_library_taxonomy_section', 'Taxonomies for Media Library',
         function () {
@@ -1029,7 +1048,7 @@ EOD
             'nggml_alt_high_density_gallery_enable', 'nggml_alt_high_density_gallery_image_width',
             'nggml_preserve_aspect_ratio_enable', 'nggml_use_full_screen_slideshow_enable',
             'nggml_alt_high_density_gallery_focus_color', 'nggml_stretch_to_fit_enable', 'nggml_slideshow_interval',
-            'nggml_screen_options', 'widget_search_media_library_by_taxonomy_widget',
+            'nggml_transition', 'nggml_screen_options', 'widget_search_media_library_by_taxonomy_widget',
             'nggtags_for_media_library_taxonomy_slug_1', 'nggtags_for_media_library_taxonomy_name_1',
             'nggtags_for_media_library_taxonomy_slug_2', 'nggtags_for_media_library_taxonomy_name_2',
             'nggtags_for_media_library_taxonomy_slug_3', 'nggtags_for_media_library_taxonomy_name_3',
@@ -1070,6 +1089,8 @@ if ( !is_admin() ) {
             . ( get_option( 'nggml_use_full_screen_slideshow_enable', '' ) === 'enabled' ? 'true;' : 'false;' )
             . 'var nggmlSlideShowInterval='
             . get_option( 'nggml_slideshow_interval', '5000' ) . ';'
+            . 'var nggmlTransition="'
+            . get_option( 'nggml_transition', 'slide-left' ) . '";'
             . 'var ajaxurl="' . admin_url( 'admin-ajax.php' ) . '";' );
     } );
     add_filter( 'wp_get_attachment_link', function( $link, $id, $size, $permalink, $icon, $text ) {
